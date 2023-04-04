@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "geotexxx"
+version = "0.0.1"
+authors = [
+    { name="Thomas van der Linden", email="t.van.der.linden@amsterdam.nl" },
+]
+description = "Package om geotechnisch grondonderzoek te verwerken"
+readme = "README.md"
+dependencies = [
+    "requests",
+    'importlib-metadata; python_version<"3.8"',
+]
