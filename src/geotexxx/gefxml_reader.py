@@ -956,6 +956,7 @@ class Bore(Test):
         self.finaldepth = None
         self.soillayers = {}
         self.analyses = []
+        self.complexAnalyses = []
         self.metadata = {}
         self.descriptionquality = None
 
@@ -1012,9 +1013,26 @@ class Bore(Test):
             elif 'boreholeSampleAnalysis' in element.tag:
                 for child in element.iter():
                     if 'investigatedInterval' in child.tag:
-                        self.analyses.append({re.sub(r'{.*}', '', p.tag) : re.sub(r'\s*', '', p.text) for p in child.iter() if p.text is not None})
+                        # dit is een eenvoudige manier om eenvoudige analyses in een tabel te zetten
+                        self.analyses.append({re.sub(r'{.*}', '', p.tag) : re.sub(r'\s*', '', p.text) for p in child.iter() if p.text is not None and p.tag not in ['settlementCharacteristicsDetermination']})
+                        
+
+                        # de eenvoudige methode werkt niet goed voor complexe proeven met bijvoorbeeld verschillende trappen
+                        for baby in child.iter():
+                            if 'settlementCharacteristicsDetermination' in baby.tag:
+                                for determination in baby.iter():
+                                    if 'determinationStep' in determination.tag:
+                                        self.complexAnalyses.append({re.sub(r'{.*}', '', p.tag) : re.sub(r'\s*', '', p.text) for p in child.iter() if p.text is not None})
+                        # TODO: doorloop settlementCharacteristicsDetermination
+                        # TODO: vind determinationStep
+                        # TODO: maak een dict complexAnalysis[proef][trap][aspect] = waarde
+
                 self.analyses = pd.DataFrame().from_dict(self.analyses)
                 self.analyses = self.analyses.astype(float, errors='ignore')
+
+                self.complexAnalyses = pd.DataFrame().from_dict(self.complexAnalyses)
+                self.complexAnalyses = self.complexAnalyses.astype(float, errors='ignore')
+
 
         self.metadata = {"easting": self.easting, "northing": self.northing, "groundlevel": self.groundlevel, "testid": self.testid, "date": self.date, "finaldepth": self.finaldepth}
 
