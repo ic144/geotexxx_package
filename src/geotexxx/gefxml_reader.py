@@ -1400,11 +1400,17 @@ class Bore(Test):
 
         return fig
 
-    def plot_samendrukkingsproeven(self):
+    def plot_samendrukkingsproeven(self, saveFigs=False):
+        figs = []
         for sampleNumber, complexAnalysis in self.complexAnalyses.items():
             if self.analyses.loc[sampleNumber, 'analysisType'] == 'zetting':
-                self.plot_samendrukkingsproef(self, sampleNumber, complexAnalysis, tijdIn='min', saveFig=False, saveData=False)
-
+                fig = self.plot_samendrukkingsproef(sampleNumber, complexAnalysis, tijdIn='min', saveFig=False, saveData=False)
+                figs.append(fig)
+                if saveFigs:
+                    plt.savefig(f'./samendrukkingsproef_{self.testid}_{sampleNumber}.png')
+                    plt.close('all')
+        return figs
+    
     def plot_samendrukkingsproef(self, sampleNumber, complexAnalysis, tijdIn='min', saveFig=False, saveData=False):
         testdf = [] # dataframe om proefresultaten in tabel weg te schrijven
         # bepaal de monsterhoogte
