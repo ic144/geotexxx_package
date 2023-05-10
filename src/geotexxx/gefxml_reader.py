@@ -1199,12 +1199,14 @@ class Bore(Test):
         # figuur breedte instellen, 6 werkt goed voor alleen een veldbeschrijving
         if nrOfLogs == 1:
             width = 6
+            ncols = 2
             width_ratios = [1, 3] # boorstaat, beschrijving
 
         # in geval van lab is het gecompliceerder
         # als er alleen veld- en labbeschrijving is, geen testen, dan is self.analyses nog een dict (niet omgezet in DataFrame)
         elif isinstance(self.analyses, dict):
             width = 18
+            ncols = 4
             width_ratios = [1, 3, 0.5, 3]
 
         # zijn er wel testen, dan alleen de numerieke kolommen selecteren voor plot
@@ -1215,12 +1217,14 @@ class Bore(Test):
             width = 24
             # voeg kolommen toe voor de plot van de meetwaarden
             # beginDepth en endDepth doen niet mee
-            width_ratios = [1, 3, 0.5, 3, 1, 1] # TODO: lengte moet afhankelijk van aantal meetkolommen
-            nrOfLogs += 1 # TODO: waarde moet afhankelijk van aantal meetkolommen
+            width_ratios = [1, 3, 0.5, 3] # ga er vanuit dat er een veld- en een labbeschrijving is
+            for k in range(len(self.analyses.columns) - 2):
+                width_ratios.append(1)
+            ncols = len(width_ratios)
 
         # maak een diagram 
         fig = plt.figure(figsize=(width, max(self.finaldepth + 2, 4.5))) 
-        gs = GridSpec(nrows=2, ncols=2 * nrOfLogs, height_ratios=[self.finaldepth, 2], width_ratios=width_ratios, figure=fig)
+        gs = GridSpec(nrows=2, ncols=ncols, height_ratios=[self.finaldepth, 2], width_ratios=width_ratios, figure=fig)
         axes = []
 
         # als er veld- en labbeschrijving is, dan worden deze apart geplot
