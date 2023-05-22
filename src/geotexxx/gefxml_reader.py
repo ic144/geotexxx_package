@@ -879,7 +879,7 @@ class Bore(Test):
         self.groundlevel = None
         self.srid = None
         self.testid = None
-        self.date = {}
+        self.date = {'year': None, 'month': None, 'day': None}
         self.finaldepth = None
         self.soillayers = {}
         self.analyses = []
@@ -1219,8 +1219,13 @@ class Bore(Test):
             nrOfLogs += 1 # TODO: waarde moet afhankelijk van aantal meetkolommen
 
         # maak een diagram 
-        fig = plt.figure(figsize=(width, max(self.finaldepth + 2, 4.5))) 
-        gs = GridSpec(nrows=2, ncols=2 * nrOfLogs, height_ratios=[self.finaldepth, 2], width_ratios=width_ratios, figure=fig)
+        if self.finaldepth is not None:
+            fig = plt.figure(figsize=(width, max(self.finaldepth + 2, 4.5)))
+            gs = GridSpec(nrows=2, ncols=2 * nrOfLogs, height_ratios=[self.finaldepth, 2], width_ratios=width_ratios, figure=fig)
+        else:
+            fig = plt.figure(figsize=(width, 4.5))
+            gs = GridSpec(nrows=2, ncols=2 * nrOfLogs, height_ratios=[4.5, 2], width_ratios=width_ratios, figure=fig)
+        
         axes = []
 
         # als er veld- en labbeschrijving is, dan worden deze apart geplot
@@ -1229,8 +1234,12 @@ class Bore(Test):
             axes.append(fig.add_subplot(gs[0, i * 2 + 1], sharey=axes[0])) # toelichting 
         
             # maak een eenvoudige plot van een boring
-            uppers = list(soillayers["upper_NAP"])
-            lowers = list(soillayers["lower_NAP"])
+            if "upper_NAP" in soillayers.columns:
+                uppers = list(soillayers["upper_NAP"])
+                lowers = list(soillayers["lower_NAP"])
+            else:
+                uppers = list(soillayers["upper"])
+                lowers = list(soillayers["lower"])
             components = list(soillayers["components"])
 
             for upper, lower, component in reversed(list(zip(uppers, lowers, components))):
@@ -1241,15 +1250,18 @@ class Bore(Test):
                         left += comp
                 except:
                     pass
-
-            axes[i * 2].set_ylim([self.groundlevel - self.finaldepth, self.groundlevel])
+            if self.groundlevel is not None:
+                axes[i * 2].set_ylim([self.groundlevel - self.finaldepth, self.groundlevel])
             axes[i * 2].set_xticks([])
             axes[i * 2].set_ylabel('diepte [m t.o.v. NAP]')
             plt.title(descriptionLocation) 
 
             # voeg de beschrijving toe
             for layer in soillayers.itertuples():
-                y = (getattr(layer, "lower_NAP") + getattr(layer, "upper_NAP")) / 2
+                if "upper_NAP" in soillayers.columns:
+                    y = (getattr(layer, "lower_NAP") + getattr(layer, "upper_NAP")) / 2
+                else:
+                    y = (getattr(layer, "lower") + getattr(layer, "upper")) / 2
                 propertiesText = ""
                 # TODO: deze materialproperty werken niet voor SIKB
                 for materialproperty in ['tertiaryConstituent', 'colour', 'dispersedInhomogeneity', 'carbonateContentClass',
@@ -1263,8 +1275,9 @@ class Bore(Test):
                             np.isnan(value)
                         except:
                             propertiesText += f', {value}'
-                text = f'{getattr(layer, "soilName")}{propertiesText}'
-                axes[i * 2 + 1].text(0, y, text, wrap=True)
+                if "soilName" in soillayers.columns:
+                    text = f'{getattr(layer, "soilName")}{propertiesText}'
+                    axes[i * 2 + 1].text(0, y, text, wrap=True)
                 # verberg de assen van de beschrijving
                 axes[i * 2 + 1].set_axis_off() 
 
@@ -1287,6 +1300,8 @@ class Bore(Test):
         # verberg de assen van de stempel
         axes[-1].set_axis_off()
         # tekst voor de stempel
+        if not isinstance(self.date, dict):
+            self.date = {'year': None, 'month': None, 'day': None}
         plt.text(0.05, 0.6, f'Boring: {self.testid}\nx-coördinaat: {self.easting}\ny-coördinaat: {self.northing}\nmaaiveld: {self.groundlevel}\nkwaliteit: {self.descriptionquality}\ndatum: {self.date["year"]}-{self.date["month"]}-{self.date["day"]}', fontsize=14, fontweight='bold')
         plt.text(0.05, 0.2, 'Ingenieursbureau Gemeente Amsterdam Vakgroep Geotechniek Python ', fontsize=10)
 
@@ -1406,7 +1421,7 @@ class Multibore():
     def __init__(self):
         self.bores = []
 
-    def load_xml_sikb0101(self, xmlFile, projectName): 
+    def load_xml_sikb0101(self, xmlFile, projectName, saveFiles=True): 
 
         # lees boringen in vanuit een SIKB0101 XML
         # anders dan de BRO komen alle boringen van een project in 1 bestand
@@ -1667,18 +1682,19 @@ class Multibore():
             'GrondsoortMediaan': 'BodemsoortMediaan',
             'ubicode': 'VerdachteActiviteit'}
         properties.rename(columns=columnsDict, inplace=True)
-        
+
         # make een mapje om bestanden per project (invoer XML) weg te schrijven
-        fileName = xmlFile.split('/')[-1].replace('.xml', '')
-        if not os.path.isdir(f'./output/{projectName}'):
-            os.mkdir(f'./output/{projectName}')
-        if not os.path.isdir(f'./output/{projectName}/{fileName}'):
-            os.mkdir(f'./output/{projectName}/{fileName}')
+        if saveFiles:
+            fileName = xmlFile.split('/')[-1].replace('.xml', '')
+            if not os.path.isdir(f'./output/{projectName}'):
+                os.mkdir(f'./output/{projectName}')
+            if not os.path.isdir(f'./output/{projectName}/{fileName}'):
+                os.mkdir(f'./output/{projectName}/{fileName}')
 
         aantal_boringen = len(properties['bore'].unique())
         
         for boreId, boreData in properties.groupby('bore'): 
-            
+
             if type(boreId) != float: # er kan een nan inzitten, dat is data type float
                 try: 
                     print(f'{boreId} van {aantal_boringen} boringen')
@@ -1694,12 +1710,12 @@ class Multibore():
                         layerData = Bodemsoort2components(layerData)
                         layerData.dropna(inplace=True)
 
-                        if all(param in layerData.index for param in ['upper', 'lower', 'Bodemsoort']): # anders plot het later niet
+                        if all(param in layerData.index for param in ['upper', 'lower']): # anders plot het later niet # TODO: hier stond ook 'Bodemsoort', maar dit zit er zelden in
                             layers[layerNr] = layerData
                     
                     bore.soillayers['veld'] = pd.DataFrame().from_dict(layers).T
                     bore.soillayers['veld'].rename(columns={'Bodemsoort': 'soilName'}, inplace=True)
-                
+
                     # soms is de lower kleiner dan upper, dat is niet volgens de conventie
                     # dan de kolommen omdraaien
                     if bore.soillayers['veld']['upper'].gt(bore.soillayers['veld']['lower']).all():
@@ -1726,9 +1742,6 @@ class Multibore():
                         bore.soillayers['veld']['upper_NAP'] = bore.groundlevel - bore.soillayers['veld']['upper']
                         bore.soillayers['veld']['lower_NAP'] = bore.groundlevel - bore.soillayers['veld']['lower']
                         bore.finaldepth = bore.soillayers['veld']['upper_NAP'].max() - bore.soillayers['veld']['lower_NAP'].min() # lengte van de boring
-                        self.bores.append(bore)
-                    else:
-                        self.bores.append(bore)
 
                     try:
                         onderkant = bore.soillayers['veld']['lower_NAP'].min()
@@ -1744,7 +1757,9 @@ class Multibore():
 
                     # schrijf een csv weg als er lagen in de boorbeschrijving zitten. Als je alles meteen omzet naar een plot, dan crasht het bij grote hoeveelheden boringen
                     if len(bore.soillayers['veld']) > 0:
-                        bore.soillayers['veld'].to_csv(f'./output/{projectName}/{fileName}/{bore.testid}_{boreId}.csv', sep=';')
+                        self.bores.append(bore)
+                        if saveFiles:
+                            bore.soillayers['veld'].to_csv(f'./output/{projectName}/{fileName}/{bore.testid}_{boreId}.csv', sep=';')
                         boorbeschrijving = True
                     else:
                         boorbeschrijving = False
@@ -1769,17 +1784,19 @@ class Multibore():
         kaart['onderkant_NAP'] = depths
         kaart['peilbuis'] = peilbuizen
         kaart['boorbeschrijving'] = boorbeschrijvingen
-        kaart.to_csv(f'./output/{projectName}/{fileName}.csv', sep=';') 
+        if saveFiles: 
+            kaart.to_csv(f'./output/{projectName}/{fileName}.csv', sep=';') 
 
         # maak een geojson voor GIS
         kaart['geometry'] = geometries
         kaart = gpd.GeoDataFrame(kaart, geometry='geometry').set_crs(epsg=28992)
-        kaart.to_file(f'./output/{projectName}/{fileName}.geojson', driver='GeoJSON') 
+        if saveFiles: 
+            kaart.to_file(f'./output/{projectName}/{fileName}.geojson', driver='GeoJSON') 
 
 def code2text(series):
     # functie om codes gebruikt in de XML op te zoeken in de domeintabellen van SIKB
     seriesTranslated = {}
-    for index, value in series.iteritems():
+    for index, value in series.items():
         try:
             # lees de tabel met coderingen in
             domeintabel = pd.read_excel(f'./sikb_domeintabellen/{index}.xlsx')
