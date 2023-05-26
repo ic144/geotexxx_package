@@ -1279,12 +1279,14 @@ class Bore(Test):
         # figuur breedte instellen, 6 werkt goed voor alleen een veldbeschrijving
         if nrOfLogs == 1:
             width = 6
+            ncols = 2
             width_ratios = [1, 3] # boorstaat, beschrijving
 
         # in geval van lab is het gecompliceerder
         # als er alleen veld- en labbeschrijving is, geen testen, dan is self.analyses niet omgezet in DataFrame
         if nrOfLogs == 2:
             width = 18
+            ncols = 4
             width_ratios = [1, 3, 0.5, 3]
 
         # zijn er wel testen, dan is self.analyses wél een DataFrame
