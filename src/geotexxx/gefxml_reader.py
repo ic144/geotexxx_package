@@ -1456,7 +1456,6 @@ class Multibore():
         peilbuizen = []
         boorbeschrijvingen = []
         from shapely.geometry import Point
-        import geopandas as gpd
 
 
         for element in root.iter():
@@ -1710,7 +1709,7 @@ class Multibore():
                         layerData = Bodemsoort2components(layerData)
                         layerData.dropna(inplace=True)
 
-                        if all(param in layerData.index for param in ['upper', 'lower']): # anders plot het later niet # TODO: hier stond ook 'Bodemsoort', maar dit zit er zelden in
+                        if all(param in layerData.index for param in ['upper', 'lower', 'Bodemsoort']): # anders plot het later niet of niet goed
                             layers[layerNr] = layerData
                     
                     bore.soillayers['veld'] = pd.DataFrame().from_dict(layers).T
@@ -1789,8 +1788,9 @@ class Multibore():
 
         # maak een geojson voor GIS
         kaart['geometry'] = geometries
-        kaart = gpd.GeoDataFrame(kaart, geometry='geometry').set_crs(epsg=28992)
         if saveFiles: 
+            import geopandas as gpd
+            kaart = gpd.GeoDataFrame(kaart, geometry='geometry').set_crs(epsg=28992)
             kaart.to_file(f'./output/{projectName}/{fileName}.geojson', driver='GeoJSON') 
 
 def code2text(series):
@@ -1799,14 +1799,13 @@ def code2text(series):
     for index, value in series.items():
         try:
             # lees de tabel met coderingen in
-            domeintabel = pd.read_excel(f'./sikb_domeintabellen/{index}.xlsx')
+            domeintabel = pd.read_excel(f'./data/raw/sikb_domeintabellen/{index}.xlsx') # TODO: dit moet een relatief pad zijn. Maar welk?
             # maak een dict voor de uitvoering
             translation = {k:v for (k,v) in zip(domeintabel['ID'], domeintabel['Omschrijving'])}
             # zet de codering om in leesbare tekst            
             seriesTranslated[index] = translation[value]
         except:
             seriesTranslated[index] = value
-            pass
 
     seriesTranslated = pd.Series(seriesTranslated)
      
