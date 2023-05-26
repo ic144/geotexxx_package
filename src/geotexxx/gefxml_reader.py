@@ -23,6 +23,7 @@ import xml.etree.ElementTree as ET
 import pyproj
 import ast
 import os
+from datetime import datetime
 
 @dataclass
 class Test():
@@ -268,6 +269,79 @@ class Cpt(Test):
         self.projectname = None
         self.filedate = {}
         self.testdate = {}
+
+    def load_son(self, sonFile, checkAddFrictionRatio=False, checkAddDepth=False, fromFile=True):
+        filename_pattern = re.compile(r'(.*[\\/])*(?P<filename>.*)\.')
+        testid_pattern = re.compile(r'Sondering\s*:\s*(?P<testid>.*)\s*')
+        date_pattern = re.compile(r'Datum\s*:\s*(?P<date>[\d-]*)')
+        xy_id_pattern = re.compile(r'')
+        z_id_pattern = re.compile(r'Maaiveld t.o.v. referentievlak\s*:\s*(?P<zid>\d*\.?\d*)\s*[\[\]mM\s]\s*')
+        companyid_pattern = re.compile(r'Bedrijf\s*:\s*(?P<companyid>.*)\s*') 
+        projectid_pattern = re.compile(r'Opdracht\s*:\s*(?P<testid>.*)\s*')
+        data_pattern = re.compile(r'Aantal meetregels\s*(bij deze sondering\.)*\s*(?P<data>[-\d\s\.]+)\s*[-=]*') # TODO: \s*(bij deze sondering\.)?
+
+        if fromFile:
+            with open(sonFile) as f:
+                son_raw = f.read()
+        else:
+            son_raw = sonFile
+
+        try:
+            #TODO: let op, er kunnen meerder sonderingen in een bestand zitten
+            match = re.search(data_pattern, son_raw)
+            data = match.group('data')
+        
+            columns= ['penetrationLength', 'coneResistance', 'localFriction', 'frictionRatio']
+            self.data = pd.read_csv(StringIO(data), sep=' ', skipinitialspace=True, lineterminator='\n', header=None)
+            self.data.columns = [col for i, col in enumerate(columns) if i < len(self.data.columns)]
+            self.data = self.data.astype(float, errors='ignore')
+        except:
+            pass
+
+        try:
+            match = re.search(testid_pattern, son_raw)
+            self.testid = match.group('testid')
+        except:
+            pass
+
+        try:
+            match = re.search(z_id_pattern, son_raw)
+            self.groundlevel = float(match.group('zid'))
+        except:
+            pass
+
+        try:
+            match = re.search(companyid_pattern, son_raw)
+            self.companyid = match.group('zid')
+        except:
+            pass
+
+        try:
+            self.date = {'year': None, 'month': None, 'day': None}
+            match = re.search(date_pattern, son_raw)
+            date = datetime.strptime(match.group('date'), '%Y-%m-%d').date()
+            self.date['year'] = date.year
+            self.date['month'] = date.month
+            self.date['day'] = date.day
+        except:
+            pass
+
+        try:
+            self.date = {'year': None, 'month': None, 'day': None}
+            match = re.search(date_pattern, son_raw)
+            date = datetime.strptime(match.group('date'), '%d-%m-%Y').date()
+            self.date['year'] = date.year
+            self.date['month'] = date.month
+            self.date['day'] = date.day
+        except:
+            pass
+
+
+        if checkAddDepth:
+            self.check_add_depth()
+        if checkAddFrictionRatio:
+            self.check_add_frictionRatio()
+
 
     def load_xml(self, xmlFile, checkAddFrictionRatio=False, checkAddDepth=False, fromFile=True):
 
@@ -842,7 +916,7 @@ class Cpt(Test):
         # http://www.cpt-robertson.com/PublicationsPDF/2-56%20RobSBT.pdf
 
         # non-normalized soil behaviour types omgezet naar Nederlandse namen
-        # TODO: nummers toevoegen
+        # TODO: SBT-nummers toevoegen
         sbtDict = {
             'veen': 3.6,
             'klei': 2.95,
@@ -855,7 +929,6 @@ class Cpt(Test):
         # formule voor non-normalized soil behaviour type
         # TODO: deze formule is er twee vormen
         # er is ook https://cpt-robertson.com/PublicationsPDF/CPT%20Guide%206th%202015.pdf
-        # TODO: de resultaten zijn niet zoals verwacht
         sbt = lambda qc, rf, isbt: ((3.47 - np.log10(qc * 1000 / 100)) ** 2 + (np.log10(rf) + 1.22) ** 2) ** 0.5 - isbt > 0
         
         conditions = [
@@ -1013,7 +1086,7 @@ class Bore(Test):
 
         self.soillayers = self.add_components_NEN()
 
-    def load_gef(self, gefFile, fromFile=True):
+    def load_gef(self, gefFile):
 
         self.columninfo = {}
         self.columnvoid_values = {}
@@ -1039,7 +1112,7 @@ class Bore(Test):
         columnseparator_pattern = re.compile(r'#COLUMNSEPARATOR\s*=\s*(?P<columnseparator>.*)\s*')
         recordseparator_pattern = re.compile(r'#RECORDSEPARATOR\s*=\s*(?P<recordseparator>.*)\s*')
 
-        self.metadata_from_gef(gefFile, fromFile)
+        self.metadata_from_gef(gefFile)
 
         with open(gefFile) as f:
             gef_raw = f.read()
@@ -1193,6 +1266,13 @@ class Bore(Test):
         hatchesDict = {0: "ooo", 1: "...", 2: "///", 3:"", 4: "---", 5: "|||", 6: ""} # NEN-EN-ISO 14688-1 style
         hatchesDictNEN5104 = {0: "ooo", 1: "...", 2: "///", 3:"\\\\\\", 4: "---", 5: "|||", 6: ""} # NEN-EN-ISO 14688-1 style
 
+        plotbareData = ['tertiaryConstituent', 'colour', 'dispersedInhomogeneity', 'carbonateContentClass',
+                            'organicMatterContentClass', 'mixed', 'sandMedianClass', 'grainshape', # TODO: sandMedianClass kan ook mooi visueel
+                            'sizeFraction', 'angularity', 'sphericity', 'fineSoilConsistency',
+                            'organicSoilTexture', 'organicSoilConsistency', 'peatTensileStrength', 'waterContent', 'volumetricMassDensity', 'volumetricMassDensitySolids', 'beginDepth', 'endDepth']
+        plotbareData = [data for data in plotbareData if data in self.analyses.columns] # bepaal welke kolommen aanwezig zijn in het dataframe
+        self.analyses = self.analyses[plotbareData] # filter alleen de plotbare data
+
         # als er een veld- en een labbeschrijving is, dan maken we meer kolommen
         nrOfLogs = len(self.soillayers.keys())
 
@@ -1203,28 +1283,27 @@ class Bore(Test):
             width_ratios = [1, 3] # boorstaat, beschrijving
 
         # in geval van lab is het gecompliceerder
-        # als er alleen veld- en labbeschrijving is, geen testen, dan is self.analyses nog een dict (niet omgezet in DataFrame)
-        elif isinstance(self.analyses, dict):
+        # als er alleen veld- en labbeschrijving is, geen testen, dan is self.analyses niet omgezet in DataFrame
+        if nrOfLogs == 2:
             width = 18
             ncols = 4
             width_ratios = [1, 3, 0.5, 3]
 
-        # zijn er wel testen, dan alleen de numerieke kolommen selecteren voor plot
-        elif isinstance(self.analyses, pd.DataFrame):
-            # filter alleen de numerieke kolommen
+        # zijn er wel testen, dan is self.analyses wél een DataFrame
+        if isinstance(self.analyses, pd.DataFrame): 
+            # alleen de numerieke kolommen selecteren voor plot
             self.analyses = self.analyses.apply(lambda x: pd.to_numeric(x.astype(str).str.replace(',',''), errors='coerce')).dropna(axis='columns', how='all')
 
-            width = 24
+            width = 24 # TODO: dynamisch maken afhankelijk van aantal kolommen met data
             # voeg kolommen toe voor de plot van de meetwaarden
-            # beginDepth en endDepth doen niet mee
-            width_ratios = [1, 3, 0.5, 3] # ga er vanuit dat er een veld- en een labbeschrijving is
-            for k in range(len(self.analyses.columns) - 2):
-                width_ratios.append(1)
-            ncols = len(width_ratios)
+            nrOfPlotbareData = len([col for col in self.analyses.columns if col in plotbareData]) # voor elke kolom met plotbare data een plot toevoegen
+            nrOfLogs += nrOfPlotbareData
+            width_ratios.extend([1] * nrOfPlotbareData) 
+
 
         # maak een diagram 
         fig = plt.figure(figsize=(width, max(self.finaldepth + 2, 4.5))) 
-        gs = GridSpec(nrows=2, ncols=ncols, height_ratios=[self.finaldepth, 2], width_ratios=width_ratios, figure=fig)
+        gs = GridSpec(nrows=2, ncols=len(width_ratios), height_ratios=[self.finaldepth, 2], width_ratios=width_ratios, figure=fig)
         axes = []
 
         # als er veld- en labbeschrijving is, dan worden deze apart geplot
@@ -1256,10 +1335,7 @@ class Bore(Test):
                 y = (getattr(layer, "lower_NAP") + getattr(layer, "upper_NAP")) / 2
                 propertiesText = ""
                 # TODO: deze materialproperty werken niet voor SIKB
-                for materialproperty in ['tertiaryConstituent', 'colour', 'dispersedInhomogeneity', 'carbonateContentClass',
-                                            'organicMatterContentClass', 'mixed', 'sandMedianClass', 'grainshape', # TODO: sandMedianClass kan ook mooi visueel
-                                            'sizeFraction', 'angularity', 'sphericity', 'fineSoilConsistency',
-                                            'organicSoilTexture', 'organicSoilConsistency', 'peatTensileStrength']:
+                for materialproperty in plotbareData:
                     # TODO: dit werkt nog niet goed
                     if materialproperty in soillayers.columns:
                         value = getattr(layer, materialproperty)
