@@ -23,6 +23,7 @@ import xml.etree.ElementTree as ET
 import pyproj
 import ast
 import os
+from datetime import datetime
 
 @dataclass
 class Test():
@@ -268,6 +269,79 @@ class Cpt(Test):
         self.projectname = None
         self.filedate = {}
         self.testdate = {}
+
+    def load_son(self, sonFile, checkAddFrictionRatio=False, checkAddDepth=False, fromFile=True):
+        filename_pattern = re.compile(r'(.*[\\/])*(?P<filename>.*)\.')
+        testid_pattern = re.compile(r'Sondering\s*:\s*(?P<testid>.*)\s*')
+        date_pattern = re.compile(r'Datum\s*:\s*(?P<date>[\d-]*)')
+        xy_id_pattern = re.compile(r'')
+        z_id_pattern = re.compile(r'Maaiveld t.o.v. referentievlak\s*:\s*(?P<zid>\d*\.?\d*)\s*[\[\]mM\s]\s*')
+        companyid_pattern = re.compile(r'Bedrijf\s*:\s*(?P<companyid>.*)\s*') 
+        projectid_pattern = re.compile(r'Opdracht\s*:\s*(?P<testid>.*)\s*')
+        data_pattern = re.compile(r'Aantal meetregels\s*(bij deze sondering\.)*\s*(?P<data>[-\d\s\.]+)\s*[-=]*') # TODO: \s*(bij deze sondering\.)?
+
+        if fromFile:
+            with open(sonFile) as f:
+                son_raw = f.read()
+        else:
+            son_raw = sonFile
+
+        try:
+            #TODO: let op, er kunnen meerder sonderingen in een bestand zitten
+            match = re.search(data_pattern, son_raw)
+            data = match.group('data')
+        
+            columns= ['penetrationLength', 'coneResistance', 'localFriction', 'frictionRatio']
+            self.data = pd.read_csv(StringIO(data), sep=' ', skipinitialspace=True, lineterminator='\n', header=None)
+            self.data.columns = [col for i, col in enumerate(columns) if i < len(self.data.columns)]
+            self.data = self.data.astype(float, errors='ignore')
+        except:
+            pass
+
+        try:
+            match = re.search(testid_pattern, son_raw)
+            self.testid = match.group('testid')
+        except:
+            pass
+
+        try:
+            match = re.search(z_id_pattern, son_raw)
+            self.groundlevel = float(match.group('zid'))
+        except:
+            pass
+
+        try:
+            match = re.search(companyid_pattern, son_raw)
+            self.companyid = match.group('zid')
+        except:
+            pass
+
+        try:
+            self.date = {'year': None, 'month': None, 'day': None}
+            match = re.search(date_pattern, son_raw)
+            date = datetime.strptime(match.group('date'), '%Y-%m-%d').date()
+            self.date['year'] = date.year
+            self.date['month'] = date.month
+            self.date['day'] = date.day
+        except:
+            pass
+
+        try:
+            self.date = {'year': None, 'month': None, 'day': None}
+            match = re.search(date_pattern, son_raw)
+            date = datetime.strptime(match.group('date'), '%d-%m-%Y').date()
+            self.date['year'] = date.year
+            self.date['month'] = date.month
+            self.date['day'] = date.day
+        except:
+            pass
+
+
+        if checkAddDepth:
+            self.check_add_depth()
+        if checkAddFrictionRatio:
+            self.check_add_frictionRatio()
+
 
     def load_xml(self, xmlFile, checkAddFrictionRatio=False, checkAddDepth=False, fromFile=True):
 
@@ -842,7 +916,7 @@ class Cpt(Test):
         # http://www.cpt-robertson.com/PublicationsPDF/2-56%20RobSBT.pdf
 
         # non-normalized soil behaviour types omgezet naar Nederlandse namen
-        # TODO: nummers toevoegen
+        # TODO: SBT-nummers toevoegen
         sbtDict = {
             'veen': 3.6,
             'klei': 2.95,
@@ -855,7 +929,6 @@ class Cpt(Test):
         # formule voor non-normalized soil behaviour type
         # TODO: deze formule is er twee vormen
         # er is ook https://cpt-robertson.com/PublicationsPDF/CPT%20Guide%206th%202015.pdf
-        # TODO: de resultaten zijn niet zoals verwacht
         sbt = lambda qc, rf, isbt: ((3.47 - np.log10(qc * 1000 / 100)) ** 2 + (np.log10(rf) + 1.22) ** 2) ** 0.5 - isbt > 0
         
         conditions = [
@@ -883,11 +956,14 @@ class Bore(Test):
         self.finaldepth = None
         self.soillayers = {}
         self.analyses = []
+        self.complexAnalyses = {}
         self.metadata = {}
         self.descriptionquality = None
 
     def load_xml(self, xmlFile, fromFile=True):
-
+        
+        complexAnalyses = {}
+        
         # lees een boring in vanuit een BRO XML
         # TODO: werkt nog niet voor IMBRO_A
         if fromFile:
@@ -939,9 +1015,29 @@ class Bore(Test):
             elif 'boreholeSampleAnalysis' in element.tag:
                 for child in element.iter():
                     if 'investigatedInterval' in child.tag:
-                        self.analyses.append({re.sub(r'{.*}', '', p.tag) : re.sub(r'\s*', '', p.text) for p in child.iter() if p.text is not None})
+                        # dit is een eenvoudige manier om eenvoudige analyses in een tabel te zetten
+                        self.analyses.append({re.sub(r'{.*}', '', p.tag) : re.sub(r'\s*', '', p.text) for p in child.iter() if p.text is not None and p.tag not in ['settlementCharacteristicsDetermination']})
+                        
+                        # de eenvoudige methode werkt niet goed voor complexe proeven met bijvoorbeeld verschillende trappen
+                        for baby in child.iter():
+                            if 'settlementCharacteristicsDetermination' in baby.tag:
+                                sampleNumber = len(complexAnalyses.keys())
+                                complexAnalyses[sampleNumber] = {}
+                                for determination in baby.iter():
+                                    if 'determinationStep' in determination.tag:
+                                        for x in determination.iter():
+                                            if 'stepNumber' in x.tag:
+                                                stepNumber = x.text
+                                        complexAnalyses[sampleNumber][stepNumber] = {re.sub(r'{.*}', '', p.tag) : re.sub(r'\s*', '', p.text) for p in determination.iter() if p.text is not None}
+
                 self.analyses = pd.DataFrame().from_dict(self.analyses)
                 self.analyses = self.analyses.astype(float, errors='ignore')
+
+                for key, values in complexAnalyses.items():
+                    complexAnalysis = pd.DataFrame().from_dict(values)
+                    complexAnalysis = complexAnalysis.astype(float, errors='ignore')
+                    self.complexAnalyses[key] = complexAnalysis
+
 
         self.metadata = {"easting": self.easting, "northing": self.northing, "groundlevel": self.groundlevel, "testid": self.testid, "date": self.date, "finaldepth": self.finaldepth}
 
@@ -1013,7 +1109,7 @@ class Bore(Test):
 
         self.soillayers = self.add_components_NEN()
 
-    def load_gef(self, gefFile, fromFile=True):
+    def load_gef(self, gefFile):
 
         self.columninfo = {}
         self.columnvoid_values = {}
@@ -1039,7 +1135,7 @@ class Bore(Test):
         columnseparator_pattern = re.compile(r'#COLUMNSEPARATOR\s*=\s*(?P<columnseparator>.*)\s*')
         recordseparator_pattern = re.compile(r'#RECORDSEPARATOR\s*=\s*(?P<recordseparator>.*)\s*')
 
-        self.metadata_from_gef(gefFile, fromFile)
+        self.metadata_from_gef(gefFile)
 
         with open(gefFile) as f:
             gef_raw = f.read()
@@ -1193,30 +1289,41 @@ class Bore(Test):
         hatchesDict = {0: "ooo", 1: "...", 2: "///", 3:"", 4: "---", 5: "|||", 6: ""} # NEN-EN-ISO 14688-1 style
         hatchesDictNEN5104 = {0: "ooo", 1: "...", 2: "///", 3:"\\\\\\", 4: "---", 5: "|||", 6: ""} # NEN-EN-ISO 14688-1 style
 
+        plotbareData = ['tertiaryConstituent', 'colour', 'dispersedInhomogeneity', 'carbonateContentClass',
+                            'organicMatterContentClass', 'mixed', 'sandMedianClass', 'grainshape', # TODO: sandMedianClass kan ook mooi visueel
+                            'sizeFraction', 'angularity', 'sphericity', 'fineSoilConsistency',
+                            'organicSoilTexture', 'organicSoilConsistency', 'peatTensileStrength', 'waterContent', 'volumetricMassDensity', 
+                            'volumetricMassDensitySolids', 'beginDepth', 'endDepth', 'maximumUndrainedShearStrength']
+        plotbareData = [data for data in plotbareData if data in self.analyses.columns] # bepaal welke kolommen aanwezig zijn in het dataframe
+        self.analyses = self.analyses[plotbareData] # filter alleen de plotbare data
+
         # als er een veld- en een labbeschrijving is, dan maken we meer kolommen
         nrOfLogs = len(self.soillayers.keys())
 
         # figuur breedte instellen, 6 werkt goed voor alleen een veldbeschrijving
         if nrOfLogs == 1:
             width = 6
+            ncols = 2
             width_ratios = [1, 3] # boorstaat, beschrijving
 
         # in geval van lab is het gecompliceerder
-        # als er alleen veld- en labbeschrijving is, geen testen, dan is self.analyses nog een dict (niet omgezet in DataFrame)
-        elif isinstance(self.analyses, dict):
+        # als er alleen veld- en labbeschrijving is, geen testen, dan is self.analyses niet omgezet in DataFrame
+        if nrOfLogs == 2:
             width = 18
+            ncols = 4
             width_ratios = [1, 3, 0.5, 3]
 
-        # zijn er wel testen, dan alleen de numerieke kolommen selecteren voor plot
-        elif isinstance(self.analyses, pd.DataFrame):
-            # filter alleen de numerieke kolommen
+        # zijn er wel testen, dan is self.analyses wél een DataFrame
+        if isinstance(self.analyses, pd.DataFrame): 
+            # alleen de numerieke kolommen selecteren voor plot
             self.analyses = self.analyses.apply(lambda x: pd.to_numeric(x.astype(str).str.replace(',',''), errors='coerce')).dropna(axis='columns', how='all')
 
-            width = 24
+            width = 24 # TODO: dynamisch maken afhankelijk van aantal kolommen met data
             # voeg kolommen toe voor de plot van de meetwaarden
-            # beginDepth en endDepth doen niet mee
-            width_ratios = [1, 3, 0.5, 3, 1, 1] # TODO: lengte moet afhankelijk van aantal meetkolommen
-            nrOfLogs += 1 # TODO: waarde moet afhankelijk van aantal meetkolommen
+            nrOfPlotbareData = len([col for col in self.analyses.columns if col in plotbareData]) # voor elke kolom met plotbare data een plot toevoegen
+            nrOfLogs += nrOfPlotbareData
+            width_ratios.extend([1] * nrOfPlotbareData) 
+
 
         # maak een diagram 
         if self.finaldepth is not None:
@@ -1264,10 +1371,7 @@ class Bore(Test):
                     y = (getattr(layer, "lower") + getattr(layer, "upper")) / 2
                 propertiesText = ""
                 # TODO: deze materialproperty werken niet voor SIKB
-                for materialproperty in ['tertiaryConstituent', 'colour', 'dispersedInhomogeneity', 'carbonateContentClass',
-                                            'organicMatterContentClass', 'mixed', 'sandMedianClass', 'grainshape', # TODO: sandMedianClass kan ook mooi visueel
-                                            'sizeFraction', 'angularity', 'sphericity', 'fineSoilConsistency',
-                                            'organicSoilTexture', 'organicSoilConsistency', 'peatTensileStrength']:
+                for materialproperty in plotbareData:
                     # TODO: dit werkt nog niet goed
                     if materialproperty in soillayers.columns:
                         value = getattr(layer, materialproperty)
@@ -1310,6 +1414,79 @@ class Bore(Test):
         if saveFig:
             plt.savefig(fname=f'{path}/{self.testid}.{outputType}')
             plt.close('all')
+
+        return fig
+
+    def plot_samendrukkingsproeven(self, saveFigs=False):
+        figs = []
+        for sampleNumber, complexAnalysis in self.complexAnalyses.items():
+            if self.analyses.loc[sampleNumber, 'analysisType'] == 'zetting':
+                fig = self.plot_samendrukkingsproef(sampleNumber, complexAnalysis, tijdIn='min', saveFig=False, saveData=False)
+                figs.append(fig)
+                if saveFigs:
+                    plt.savefig(f'./samendrukkingsproef_{self.testid}_{sampleNumber}.png')
+                    plt.close('all')
+        return figs
+    
+    def plot_samendrukkingsproef(self, sampleNumber, complexAnalysis, tijdIn='min', saveFig=False, saveData=False):
+        testdf = [] # dataframe om proefresultaten in tabel weg te schrijven
+        # bepaal de monsterhoogte
+        sampleHeight = float(self.analyses.loc[sampleNumber, 'endDepth']) - float(self.analyses.loc[sampleNumber, 'beginDepth'])
+
+        # maak een figuur met boven tijd-zetting en onder belasting-rek
+        fig = plt.figure(figsize=[8, 12]) 
+        gs = GridSpec(nrows=2, ncols=1, figure=fig)
+        ax1 = fig.add_subplot(gs[0, 0])
+        ax2 = fig.add_subplot(gs[1, 0])
+
+        # maak een tijd-zetting plot
+        # voeg de trappen toe aan de plot
+        for stepNumber in complexAnalysis.loc['values'].index:
+            xy = pd.read_csv(StringIO(complexAnalysis.loc['values', stepNumber]), sep=',', lineterminator=';', header=None)
+            # in xml tijd in secondes, omzetten naar minuten of dagen, dat is standaard voor plots
+            if tijdIn == 'min':
+                x = xy[0] / 60
+            elif tijdIn == 'dag':
+                x = xy[0] / 60 / 60 / 24
+            # in xml lineaire rek in %, omzetten naar mm, dat is standaard voor plots. monsterhoogte is in xml in m
+            y = xy[1] / 100 * sampleHeight * 1000
+            ax1.plot(x, y) 
+            xy['stap'] = stepNumber
+            testdf.append(xy)
+
+        # opmaak figuur
+        ax1.invert_yaxis()
+        ax1.set_xlabel(f'Tijd [{tijdIn}]')
+        ax1.set_ylabel('Zetting [mm]')
+        ax1.set_title(f'Tijd-Zetting Boring: {self.testid} Monster: {sampleNumber} Niveau: {float(self.analyses.loc[sampleNumber, "endDepth"]):.2f} - {float(self.analyses.loc[sampleNumber, "beginDepth"]):.2f}')
+
+        # tabel met proefresultaten wegschrijven
+        if saveData:
+            testdf = pd.concat(testdf)
+            testdf.to_csv(f'./tijdzetting_{sampleNumber}.csv', sep=';', decimal=',')
+
+        # maak een belasting-rek plot
+        x, y = [], []
+        # doorloop de stappen
+        for stepNumber in complexAnalysis.loc['values'].index:
+
+            xy = pd.read_csv(StringIO(complexAnalysis.loc['values', stepNumber]), sep=',', lineterminator=';', header=None)
+            # x is de spanning tijdens de trap
+            x.append(float(complexAnalysis.loc['verticalStress', stepNumber]))
+            # y is de rek aan het einde van de trap
+            y.append(float(xy[1].iloc[-1]) / 100) # in xml rek in %, dat omzetten naar een fractie 0-1
+
+        # figuur opmaken
+        ax2.plot(x, y)
+        ax2.set_xscale('log')
+        ax2.set_xlim([1, 1000])
+        ax2.invert_yaxis()
+        ax2.set_xlabel('belasting [kPa]')
+        ax2.set_ylabel('lineaire rek [-]')
+        ax2.set_title(f'Belasting-Rek Boring: {self.testid} Monster: {sampleNumber} Niveau: {float(self.analyses.loc[sampleNumber, "endDepth"]):.2f} - {float(self.analyses.loc[sampleNumber, "beginDepth"]):.2f}')
+
+        if saveFig:
+            plt.savefig(f'./samendrukkingsproef_{self.testid}_{sampleNumber}.png')
 
         return fig
 
