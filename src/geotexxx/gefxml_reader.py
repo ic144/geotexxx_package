@@ -1315,13 +1315,13 @@ class Bore(Test):
         if isinstance(self.analyses, pd.DataFrame): 
             # alleen de numerieke kolommen selecteren voor plot
             # maak een nieuw dataframe voor de eenvoudige plots (TODO: kan ook gebruikt worden als aparte output)
-            self.plotTabel = self.analyses.apply(lambda x: pd.to_numeric(x.astype(str).str.replace(',',''), errors='coerce')).dropna(axis='columns', how='all')
-            plotbareData = [data for data in plotbareData if data in self.plotTabel.columns] # bepaal welke kolommen aanwezig zijn in het dataframe
-            self.plotTabel = self.plotTabel[plotbareData] # filter alleen de plotbare data
+            plotTabel = self.analyses.apply(lambda x: pd.to_numeric(x.astype(str).str.replace(',',''), errors='coerce')).dropna(axis='columns', how='all')
+            plotbareData = [data for data in plotbareData if data in plotTabel.columns] # bepaal welke kolommen aanwezig zijn in het dataframe
+            plotTabel = plotTabel[plotbareData] # filter alleen de plotbare data
 
             width = 24 # TODO: dynamisch maken afhankelijk van aantal kolommen met data
             # voeg kolommen toe voor de plot van de meetwaarden
-            nrOfPlotbareData = len([col for col in self.plotTabel.columns if col in plotbareData]) # voor elke kolom met plotbare data een plot toevoegen
+            nrOfPlotbareData = len([col for col in plotTabel.columns if col in plotbareData]) # voor elke kolom met plotbare data een plot toevoegen
             ncols += nrOfPlotbareData
             width_ratios.extend([1] * nrOfPlotbareData) 
 
@@ -1391,13 +1391,13 @@ class Bore(Test):
         # als er analyses zijn uitgevoerd, deze ook toevoegen
         # TODO: filteren welke wel / niet of samen
         # TODO: korrelgrootte uit beschrijving toevoegen?
-        if isinstance(self.plotTabel, pd.DataFrame):
-            averageDepth = self.groundlevel - self.plotTabel[['beginDepth', 'endDepth']].mean(axis=1)
+        if isinstance(plotTabel, pd.DataFrame):
+            averageDepth = self.groundlevel - plotTabel[['beginDepth', 'endDepth']].mean(axis=1)
             # voeg axes toe voor de plots
             # TODO: dit ook werkend maken voor korrelgrootteverdelingen (zie Vreeswijkpad voor voorbeeldbestanden)
-            for j, col in enumerate([col for col in self.plotTabel.columns if col not in ['beginDepth', 'endDepth']]):
+            for j, col in enumerate([col for col in plotTabel.columns if col not in ['beginDepth', 'endDepth']]):
                 axes.append(fig.add_subplot(gs[0, i * 2 + 2 + j], sharey=axes[0]))
-                axes[i * 2 + 2 + j].plot(self.plotTabel[col], averageDepth, '.')
+                axes[i * 2 + 2 + j].plot(plotTabel[col], averageDepth, '.')
                 plt.title(col)
 
         # voeg een stempel toe
