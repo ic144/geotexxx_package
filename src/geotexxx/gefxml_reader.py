@@ -1324,7 +1324,8 @@ class Bore(Test):
             nrOfPlotbareData = len([col for col in plotTabel.columns if col in plotbareData]) # voor elke kolom met plotbare data een plot toevoegen
             ncols += nrOfPlotbareData
             width_ratios.extend([1] * nrOfPlotbareData) 
-
+        else:
+            plotTabel = None
 
         # maak een diagram 
         if self.finaldepth is not None:
