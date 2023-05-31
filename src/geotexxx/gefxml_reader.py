@@ -1426,7 +1426,7 @@ class Bore(Test):
                 fig = self.plot_samendrukkingsproef(sampleNumber, complexAnalysis, tijdIn='min', saveFig=False, saveData=False)
                 figs.append(fig)
                 if saveFigs:
-                    plt.savefig(f'./samendrukkingsproef_{self.testid}_{sampleNumber}.png')
+                    plt.savefig(f'./output/samendrukkingsproef_{self.testid}_{sampleNumber}.png')
                     plt.close('all')
         return figs
     
@@ -1465,7 +1465,7 @@ class Bore(Test):
         # tabel met proefresultaten wegschrijven
         if saveData:
             testdf = pd.concat(testdf)
-            testdf.to_csv(f'./tijdzetting_{sampleNumber}.csv', sep=';', decimal=',')
+            testdf.to_csv(f'./output/tijdzetting_{sampleNumber}.csv', sep=';', decimal=',')
 
         # maak een belasting-rek plot
         x, y = [], []
@@ -1488,9 +1488,62 @@ class Bore(Test):
         ax2.set_title(f'Belasting-Rek Boring: {self.testid} Monster: {sampleNumber} Niveau: {float(self.analyses.loc[sampleNumber, "endDepth"]):.2f} - {float(self.analyses.loc[sampleNumber, "beginDepth"]):.2f}')
 
         if saveFig:
-            plt.savefig(f'./samendrukkingsproef_{self.testid}_{sampleNumber}.png')
+            plt.savefig(f'./output/samendrukkingsproef_{self.testid}_{sampleNumber}.png')
 
         return fig
+
+    def plot_korrelgrootte_verdeling(self, grainsizeData, monster, saveFig=False, saveData=False):
+        fig = plt.figure()
+        ax = fig.add_subplot()
+        ax.semilogx(grainsizeData.columns, pd.to_numeric(grainsizeData.loc[monster]).cumsum())
+        ax.set_xlabel('korrelgrootte [mm]')
+        ax.set_ylabel('[%]')
+
+        if saveFig:
+            plt.savefig(f'./output/korrelgrootte_{self.testid}_{monster}.png')
+
+        if saveData:
+            grainsizeData.to_csv(f'./output/korrelgrootte_{self.testid}_{monster}.csv', sep=';', decimal=',')
+
+        return fig
+
+
+    def plot_korrelgrootte_verdelingen(self, saveFigs=False):
+        figs = []
+
+        grainsize_pattern = re.compile(r'fraction(?P<from>\d+_?\d*)u*m*to(?P<to>\d+_?\d*)(?P<unit>[um]m)')
+
+        if isinstance(self.analyses, pd.DataFrame) and 'korrelgrootteverdeling' in self.analyses['analysisType'].unique():
+            # filter kolommen zodat ze fraction ... to bevatten
+            grainsizeData = self.analyses[self.analyses['analysisType'] == 'korrelgrootteverdeling']
+
+            grainsizeCols = []
+            for col in self.analyses.columns:
+                if 'fraction' in col and 'to' in col:
+                    grainsizeCols.append(col)
+            grainsizeData = grainsizeData[grainsizeCols]
+
+            # doorloop de kolomnamen om deze numeriek te maken'
+            grainsizeData.columns = grainsizeData.columns.str.extract(grainsize_pattern)
+            
+            # maak van de waarden alles mm
+            colsMm = []
+            for col in grainsizeData.columns:
+                if col[2] == 'um':
+                    colsMm.append(float(col[1].replace('_', '.')) / 1000)
+                elif col[2] == 'mm':
+                    colsMm.append(float(col[1].replace('_', '.')))
+            grainsizeData.columns = colsMm
+
+            # maak een plot
+            for monster in grainsizeData.index:
+                fig = self.plot_korrelgrootte_verdeling(grainsizeData, monster, saveFig=False, saveData=False)
+                figs.append(fig)
+                if saveFigs:
+                    plt.savefig(f'./output/korrelgrootte_{self.testid}_{monster}.png')
+
+        return figs
+
 
     def from_cpt(self, cpt, interpretationModel='Robertson'):
 
