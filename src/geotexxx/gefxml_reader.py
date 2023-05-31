@@ -1294,8 +1294,6 @@ class Bore(Test):
                             'sizeFraction', 'angularity', 'sphericity', 'fineSoilConsistency',
                             'organicSoilTexture', 'organicSoilConsistency', 'peatTensileStrength', 'waterContent', 'volumetricMassDensity', 
                             'volumetricMassDensitySolids', 'beginDepth', 'endDepth', 'maximumUndrainedShearStrength']
-        plotbareData = [data for data in plotbareData if data in self.analyses.columns] # bepaal welke kolommen aanwezig zijn in het dataframe
-        self.analyses = self.analyses[plotbareData] # filter alleen de plotbare data
 
         # als er een veld- en een labbeschrijving is, dan maken we meer kolommen
         nrOfLogs = len(self.soillayers.keys())
@@ -1316,22 +1314,26 @@ class Bore(Test):
         # zijn er wel testen, dan is self.analyses wél een DataFrame
         if isinstance(self.analyses, pd.DataFrame): 
             # alleen de numerieke kolommen selecteren voor plot
-            self.analyses = self.analyses.apply(lambda x: pd.to_numeric(x.astype(str).str.replace(',',''), errors='coerce')).dropna(axis='columns', how='all')
+            # maak een nieuw dataframe voor de eenvoudige plots (TODO: kan ook gebruikt worden als aparte output)
+            plotTabel = self.analyses.apply(lambda x: pd.to_numeric(x.astype(str).str.replace(',',''), errors='coerce')).dropna(axis='columns', how='all')
+            plotbareData = [data for data in plotbareData if data in plotTabel.columns] # bepaal welke kolommen aanwezig zijn in het dataframe
+            plotTabel = plotTabel[plotbareData] # filter alleen de plotbare data
 
             width = 24 # TODO: dynamisch maken afhankelijk van aantal kolommen met data
             # voeg kolommen toe voor de plot van de meetwaarden
-            nrOfPlotbareData = len([col for col in self.analyses.columns if col in plotbareData]) # voor elke kolom met plotbare data een plot toevoegen
-            nrOfLogs += nrOfPlotbareData
+            nrOfPlotbareData = len([col for col in plotTabel.columns if col in plotbareData]) # voor elke kolom met plotbare data een plot toevoegen
+            ncols += nrOfPlotbareData
             width_ratios.extend([1] * nrOfPlotbareData) 
-
+        else:
+            plotTabel = None
 
         # maak een diagram 
         if self.finaldepth is not None:
             fig = plt.figure(figsize=(width, max(self.finaldepth + 2, 4.5)))
-            gs = GridSpec(nrows=2, ncols=2 * nrOfLogs, height_ratios=[self.finaldepth, 2], width_ratios=width_ratios, figure=fig)
+            gs = GridSpec(nrows=2, ncols=ncols, height_ratios=[self.finaldepth, 2], width_ratios=width_ratios, figure=fig)
         else:
             fig = plt.figure(figsize=(width, 4.5))
-            gs = GridSpec(nrows=2, ncols=2 * nrOfLogs, height_ratios=[4.5, 2], width_ratios=width_ratios, figure=fig)
+            gs = GridSpec(nrows=2, ncols=ncols, height_ratios=[4.5, 2], width_ratios=width_ratios, figure=fig)
         
         axes = []
 
@@ -1390,13 +1392,13 @@ class Bore(Test):
         # als er analyses zijn uitgevoerd, deze ook toevoegen
         # TODO: filteren welke wel / niet of samen
         # TODO: korrelgrootte uit beschrijving toevoegen?
-        if isinstance(self.analyses, pd.DataFrame):
-            averageDepth = self.groundlevel - self.analyses[['beginDepth', 'endDepth']].mean(axis=1)
+        if isinstance(plotTabel, pd.DataFrame):
+            averageDepth = self.groundlevel - plotTabel[['beginDepth', 'endDepth']].mean(axis=1)
             # voeg axes toe voor de plots
             # TODO: dit ook werkend maken voor korrelgrootteverdelingen (zie Vreeswijkpad voor voorbeeldbestanden)
-            for j, col in enumerate([col for col in self.analyses.columns if col not in ['beginDepth', 'endDepth']]):
+            for j, col in enumerate([col for col in plotTabel.columns if col not in ['beginDepth', 'endDepth']]):
                 axes.append(fig.add_subplot(gs[0, i * 2 + 2 + j], sharey=axes[0]))
-                axes[i * 2 + 2 + j].plot(self.analyses[col], averageDepth, '.')
+                axes[i * 2 + 2 + j].plot(plotTabel[col], averageDepth, '.')
                 plt.title(col)
 
         # voeg een stempel toe
