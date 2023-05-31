@@ -1928,8 +1928,6 @@ class Multibore():
 
             if type(boreId) != float: # er kan een nan inzitten, dat is data type float
                 try: 
-                    print(f'{boreId} van {aantal_boringen} boringen')
-
                     # TODO: zou dit beter zijn als method voor de class Bore?
                     bore = Bore()
                     bore.soillayers = {}
@@ -2003,8 +2001,8 @@ class Multibore():
                     depths.append(onderkant)
                     peilbuizen.append(peilbuisAanwezig)
                     boorbeschrijvingen.append(boorbeschrijving)
-                except Exception as e:
-                    print(boreId, e)
+                except:
+                    pass
 
         # maak een csv met locaties en bestandsnamen en of er een boorbeschrijving en een peilbuis aanwezig is
         kaart = pd.DataFrame()
