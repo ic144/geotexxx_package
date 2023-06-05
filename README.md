@@ -7,7 +7,7 @@ See environment.yml
 
 ## Instruction
 Importeer de package:  
-`from geotexxx.gefxml_reader import Cpt, Bore`
+`from geotexxx.gefxml_reader import Cpt, Bore`  
 Maak een leeg object:  
 `test = Cpt()` or `test = Bore()`    
 Lees een bestand:  
