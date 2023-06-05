@@ -1653,13 +1653,19 @@ class Multibore():
     def __init__(self):
         self.bores = []
 
-    def load_xml_sikb0101(self, xmlFile, projectName, saveFiles=True): 
+    def load_xml_sikb0101(self, xmlFile, projectName, saveFiles=True, fromFile=True): 
 
         # lees boringen in vanuit een SIKB0101 XML
         # anders dan de BRO komen alle boringen van een project in 1 bestand
-        tree = ElementTree()
-        tree.parse(xmlFile)
-        root = tree.getroot()
+        if fromFile:
+            # Standaard functionaliteit voor wanneer de XML uit een file wordt gelezen
+            tree = ElementTree()
+            tree.parse(xmlFile)
+            root = tree.getroot()
+        else:
+            # Indien het fromFile argument op False wordt gezet, kan de data uit een string worden gelezen (lezen via API)
+            # xmlFile is dan de string met XML 
+            root = ET.fromstring(xmlFile)
 
         boreholes = {} # om Layer te koppelen aan Borehole
         layers = {} # om Analysis te koppelen aan Layer
