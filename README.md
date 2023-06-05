@@ -1,11 +1,13 @@
 # gefxml_reader
+Package om geotechnische sonderingen of boringen in GEF, BRO XML of SIKB0101 XML te lezen en visualiseren
 
-Application to read geotechnical CPT and bore data in GEF or BRO XML format
 
 ## Dependecies
-See environment.yml
+Zie environment.yml
 
 ## Instruction
+Installeer de package:  
+`pip install geotexxx` of `conda install -c conda-forge geotexxx`
 Importeer de package:  
 `from geotexxx.gefxml_reader import Cpt, Bore`  
 Maak een leeg object:  
