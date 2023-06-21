@@ -1395,7 +1395,6 @@ class Bore(Test):
         if isinstance(plotTabel, pd.DataFrame):
             averageDepth = self.groundlevel - plotTabel[['beginDepth', 'endDepth']].mean(axis=1)
             # voeg axes toe voor de plots
-            # TODO: dit ook werkend maken voor korrelgrootteverdelingen (zie Vreeswijkpad voor voorbeeldbestanden)
             for j, col in enumerate([col for col in plotTabel.columns if col not in ['beginDepth', 'endDepth']]):
                 axes.append(fig.add_subplot(gs[0, i * 2 + 2 + j], sharey=axes[0]))
                 axes[i * 2 + 2 + j].plot(plotTabel[col], averageDepth, '.')
@@ -1508,8 +1507,9 @@ class Bore(Test):
         return fig
 
 
-    def plot_korrelgrootte_verdelingen(self, saveFigs=False):
+    def plot_korrelgrootte_verdelingen(self, saveFigs=False, saveData=False):
         figs = []
+        grainsizeDatas = pd.DataFrame()
 
         grainsize_pattern = re.compile(r'fraction(?P<from>\d+_?\d*)u*m*to(?P<to>\d+_?\d*)(?P<unit>[um]m)')
 
@@ -1539,10 +1539,17 @@ class Bore(Test):
             for monster in grainsizeData.index:
                 fig = self.plot_korrelgrootte_verdeling(grainsizeData, monster, saveFig=False, saveData=False)
                 figs.append(fig)
+                if len(grainsizeDatas) == 0:
+                    grainsizeDatas = grainsizeData
+                else:    
+                    grainsizeDatas.concat(grainsizeData)
                 if saveFigs:
                     plt.savefig(f'./output/korrelgrootte_{self.testid}_{monster}.png')
 
-        return figs
+        if saveData:
+            grainsizeDatas.to_csv(f'./output/korrelgrootte_{self.testid}.csv')
+
+        return figs, grainsizeDatas
 
 
     def from_cpt(self, cpt, interpretationModel='Robertson'):
