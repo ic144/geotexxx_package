@@ -3,11 +3,11 @@ import numpy as np
 
 
 def doorlatendheid_uit_korrelgrootteverdeling(grainsizedistribution):
-    # formules overgenomen van https://github.com/Died1808/Korrelgrootte-analyse
+    # formules overgenomen van Dick Edelman: https://github.com/Died1808/Korrelgrootte-analyse
     
     out=pd.DataFrame(columns = [['nr', 'D5','D10','D15','D17','D20','D25',
     'D30','D35','D40','D45','D50','D55','D60','D65','D70','D75','D80','D85','D90',
-    'D95','D100', 'k_Haazen','k_Sauerbrei','k_Pavchich','k_Seelheim','k_CarKoz','k_Alysen','k_Bedinger',
+    'D95','D100', 'k_Hazen','k_Sauerbrei','k_Pavchich','k_Seelheim','k_CarKoz','k_Alysen','k_Bedinger',
     'k_Terzaghi','k_Harleman','k_DenRooij','k_Beyer','k_KCB','k_KCU', 'Cu','Io', 'k_mediaan','k_mean']])
 
 
@@ -71,20 +71,25 @@ def doorlatendheid_uit_korrelgrootteverdeling(grainsizedistribution):
             Sauerbrei = g/Kinvis*(0.00375*((Por**3)/(1-Por)**2)*(df.iloc[3,1]**2)*Corfact)
         else:
             Sauerbrei=np.nan
+
         if df.iloc[10,1] < 0.5:
             Pavchich = 1200*Corfact*df.iloc[3,1]**2
         else:
             Pavchich=np.nan
+
         if df.iloc[10,1] > 2:
-            Seelheim=np.nan
+            Seelheim = np.nan
         else:
             Seelheim = 308*df.iloc[10,1]**2
+
         if (1 > df.iloc[1,1] > 0.1) and df.iloc[12,1] <5:
-            US = 80* df.iloc[4,1]**2.3 # 311 cf excel, maar dan ligt alles een facto r4 te hoog irt de rest
+            US = 80 * df.iloc[4,1] ** 2.3 # 311 cf excel, maar dan ligt alles een factor 4 te hoog irt de rest
         else:
             US=np.nan
+
         KCB    = 0.25*Ck*(diwa12gr*g/Dynvis)*(Por**3/(1-Por)**2)*((df.iloc[1,1]**2)) # Delen door 4? om aan te sluiten bij de rest? en hieronder door 5
         KCU    = 0.2*(1/Vorm)*0.417*(Porget**3)/(1+Porget)*((df.iloc[10,1]**2)*((np.exp((-1/8)*np.log(df.iloc[14,1]/df.iloc[2,1]))**2))**2)*3600*24
+
         if df.iloc[10,1] > 2:
             CarKoz=np.nan
             AlySen = np.nan
@@ -93,7 +98,7 @@ def doorlatendheid_uit_korrelgrootteverdeling(grainsizedistribution):
             AlySen = 1296*((Io+0.025*(df.iloc[10,1]-df.iloc[1,1]))**2)
 
         if df.iloc[10,1] > 2:
-            Bedinger=np.nan
+            Bedinger = np.nan
             Harleman = np.nan
             Terzaghi = np.nan
             DenRooij = np.nan
@@ -102,8 +107,8 @@ def doorlatendheid_uit_korrelgrootteverdeling(grainsizedistribution):
             Bedinger = 200*df.iloc[10,1]**2
             Harleman = 0.01157*6.54e-1*(df.iloc[1,1])**2*(24*60*60)
             Terzaghi = 1000*((Por-0.13)**2/((1-Por)**2/3))*df.iloc[1,1]
-            DenRooij= 0.1*(1.2e4-1.83e3*np.log(Cu))*df.iloc[1,1]**2 #met de factor 0.1 komt Den Rooijen overeen met de andere methodes. Weet niet waarom
-            Beyer = 0.1*(6e-4*g/Kinvis)*np.log10(500/Cu)*df.iloc[1,1]**2 #met de factor 0.1 komt Beyer overeen met de andere methodes. Weet niet waarom 
+            DenRooij = 0.1*(1.2e4-1.83e3*np.log(Cu))*df.iloc[1,1]**2 # met de factor 0.1 komt Den Rooijen overeen met de andere methodes. Weet niet waarom
+            Beyer = 0.1*(6e-4*g/Kinvis)*np.log10(500/Cu)*df.iloc[1,1]**2 # met de factor 0.1 komt Beyer overeen met de andere methodes. Weet niet waarom 
 
         """
         Uiteindelijk wordt hieronder alles verwerkt tot een uitvoertabel.
