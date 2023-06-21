@@ -206,8 +206,8 @@ class Test():
         elif len(self.startdate.keys()) < len(self.filedate.keys()):
             self.date = self.filedate
         # als ze allebei gedefinieerd zijn
-        elif len(self.filedate.keys()) == 3:
-            self.date = self.filedate
+        elif len(self.startdate.keys()) == 3:
+            self.date = self.startdate
 
         try:
             # informatie in measurementtext kan meerdere namen hebben
