@@ -1101,6 +1101,11 @@ class Bore(Test):
                 soillayer['baseDepth'] = float(element.attrib['baseDepth']) / layerToM
                 soillayers.append(soillayer)
             
+            elif 'date' in element.tag:
+                self.date['year'] = element.attrib['startYear']
+                self.date['month'] = element.attrib['startMonth']
+                self.date['day'] = element.attrib['startDay']
+                
         self.soillayers['veld'] = pd.DataFrame(soillayers) 
         
         self.soillayers['veld']['soilName'] = self.soillayers['veld']['lithology'] # TODO: admixtures ook meenemen
