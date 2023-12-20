@@ -287,18 +287,6 @@ class Cpt(Test):
             son_raw = sonFile
 
         try:
-            #TODO: let op, er kunnen meerder sonderingen in een bestand zitten
-            match = re.search(data_pattern, son_raw)
-            data = match.group('data')
-        
-            columns= ['penetrationLength', 'coneResistance', 'localFriction', 'frictionRatio']
-            self.data = pd.read_csv(StringIO(data), sep=' ', skipinitialspace=True, lineterminator='\n', header=None)
-            self.data.columns = [col for i, col in enumerate(columns) if i < len(self.data.columns)]
-            self.data = self.data.astype(float, errors='ignore')
-        except:
-            pass
-
-        try:
             match = re.search(testid_pattern, son_raw)
             self.testid = match.group('testid')
         except:
@@ -336,6 +324,20 @@ class Cpt(Test):
         except:
             pass
 
+        try:
+            #TODO: let op, er kunnen meerder sonderingen in een bestand zitten
+            match = re.search(data_pattern, son_raw)
+            data = match.group('data')
+        
+            # het lijkt erop dat de kolommen standaard zijn
+            columns = ['depth', 'coneResistance', 'localFriction', 'frictionRatio']
+            self.data = pd.read_csv(StringIO(data), sep=' ', skipinitialspace=True, lineterminator='\n', header=None)
+            # kolomnamen toevoegen
+            self.data.columns = [col for i, col in enumerate(columns) if i < len(self.data.columns)]
+            self.data['penetrationLength'] = self.data['depth'] - self.groundlevel
+            self.data = self.data.astype(float, errors='ignore')
+        except:
+            pass
 
         if checkAddDepth:
             self.check_add_depth()
@@ -1101,6 +1103,11 @@ class Bore(Test):
                 soillayer['baseDepth'] = float(element.attrib['baseDepth']) / layerToM
                 soillayers.append(soillayer)
             
+            elif 'date' in element.tag:
+                self.date['year'] = element.attrib['startYear']
+                self.date['month'] = element.attrib['startMonth']
+                self.date['day'] = element.attrib['startDay']
+                
         self.soillayers['veld'] = pd.DataFrame(soillayers) 
         
         self.soillayers['veld']['soilName'] = self.soillayers['veld']['lithology'] # TODO: admixtures ook meenemen
