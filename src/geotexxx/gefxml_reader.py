@@ -814,22 +814,30 @@ class Cpt(Test):
             if "penetrationLength" in self.data.columns:
                 self.data.sort_values("penetrationLength", inplace=True)
                 if "inclinationResultant" in self.data.columns:
+                    self.data["inclinationResultant"].fillna(0,  inplace=True)
                     self.data["correctedPenetrationLength"] = self.data["penetrationLength"].diff().abs() * np.cos(np.deg2rad(self.data["inclinationResultant"]))
-                    self.data["depth"] = self.data["correctedPenetrationLength"].cumsum() + self.data['penetrationLength'].iloc[0]                
+                    self.data["correctedPenetrationLength"] = self.data["correctedPenetrationLength"].cumsum()
+                    self.data["depth"] = self.data["correctedPenetrationLength"] + self.data['penetrationLength'].iloc[0]
                 elif "inclinationEW" in self.data.columns and "inclinationNS" in self.data.columns:
+                    self.data["inclinationEW"].fillna(0,  inplace=True)
+                    self.data["inclinationNS"].fillna(0,  inplace=True)
                     z = self.data["penetrationLength"].diff().abs()
                     x = z * np.tan(np.deg2rad(self.data["inclinationEW"]))
                     y = z * np.tan(np.deg2rad(self.data["inclinationNS"]))
                     self.data["inclinationResultant"] = np.rad2deg(np.cos(np.sqrt(x ** 2 + y ** 2 + z ** 2) / z))
                     self.data["correctedPenetrationLength"] = self.data["penetrationLength"].diff().abs() * np.cos(np.deg2rad(self.data["inclinationResultant"]))
-                    self.data["depth"] = self.data["correctedPenetrationLength"].cumsum() + self.data['penetrationLength'].iloc[0]
+                    self.data["correctedPenetrationLength"] = self.data["correctedPenetrationLength"].cumsum()
+                    self.data["depth"] = self.data["correctedPenetrationLength"] + self.data['penetrationLength'].iloc[0]
                 elif "inclinationX" and "inclinationY" in self.data.columns:
+                    self.data["inclinationX"].fillna(0,  inplace=True)
+                    self.data["inclinationY"].fillna(0,  inplace=True)
                     z = self.data["penetrationLength"].diff().abs()
                     x = z * np.tan(np.deg2rad(self.data["inclinationX"]))
                     y = z * np.tan(np.deg2rad(self.data["inclinationY"]))
                     self.data["inclinationResultant"] = np.rad2deg(np.cos(np.sqrt(x ** 2 + y ** 2 + z ** 2) / z))
                     self.data["correctedPenetrationLength"] = self.data["penetrationLength"].diff().abs() * np.cos(np.deg2rad(self.data["inclinationResultant"]))
-                    self.data["depth"] = self.data["correctedPenetrationLength"].cumsum() + self.data['penetrationLength'].iloc[0]
+                    self.data["correctedPenetrationLength"] = self.data["correctedPenetrationLength"].cumsum()
+                    self.data["depth"] = self.data["correctedPenetrationLength"] + self.data['penetrationLength'].iloc[0]
                 # anders is de diepte gelijk aan de penetration length
                 else:
                     self.data["depth"] = self.data["penetrationLength"].abs()
