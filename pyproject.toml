@@ -1,11 +1,15 @@
+# inspired by https://github.com/fatiando/verde/blob/main/pyproject.toml
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_scheme =  "post-release"
+local_scheme =  "node-and-date"
+write_to =  "geotexxx/_version_generated.py"
 
 [project]
 name = "geotexxx"
-
-version = "0.1.16"
 
 authors = [
     { name="Thomas van der Linden", email="t.van.der.linden@amsterdam.nl" },
