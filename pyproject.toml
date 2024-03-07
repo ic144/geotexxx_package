@@ -8,12 +8,14 @@ version_scheme =  "post-release"
 local_scheme =  "node-and-date"
 write_to =  "src/geotexxx/_version_generated.py"
 
-# authors = [
-#    { name="Thomas van der Linden", email="t.van.der.linden@amsterdam.nl" },
-#]
-#description = "Package om geotechnisch grondonderzoek te verwerken"
-#readme = "README.md"
-#dependencies = [
-#    "requests",
-#    'importlib-metadata; python_version<"3.8"',
-#]
+[project]
+name = "geotexxx"
+description = "Package om geotechnisch grondonderzoek te verwerken"
+authors = [
+    { name="Thomas van der Linden", email="t.van.der.linden@amsterdam.nl" },
+]
+readme = "README.md"
+dependencies = [
+    "requests",
+    'importlib-metadata; python_version<"3.8"',
+]
