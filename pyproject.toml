@@ -1,22 +1,9 @@
 # inspired by https://github.com/fatiando/verde/blob/main/pyproject.toml
 [build-system]
-requires = ["setuptools", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 version_scheme =  "post-release"
 local_scheme =  "node-and-date"
-write_to =  "geotexxx/_version_generated.py"
-
-[project]
-name = "geotexxx"
-
-authors = [
-    { name="Thomas van der Linden", email="t.van.der.linden@amsterdam.nl" },
-]
-description = "Package om geotechnisch grondonderzoek te verwerken"
-readme = "README.md"
-dependencies = [
-    "requests",
-    'importlib-metadata; python_version<"3.8"',
-]
+write_to =  "src/geotexxx/_version_generated.py"

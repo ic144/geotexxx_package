@@ -71,7 +71,7 @@ jobs:
 
       - name: Build source and wheel distributions
         run: |
-          make build
+          python -m build
           echo ""
           echo "Generated files:"
           ls -lh dist/
