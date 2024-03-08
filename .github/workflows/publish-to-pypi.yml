@@ -96,6 +96,9 @@ jobs:
     environment: pypi
     # Only publish from the origin repository, not forks
     if: github.repository_owner == 'ic144' && github.event_name != 'pull_request'
+    permissions:
+      # This permission allows trusted publishing to PyPI (without an API token)
+      id-token: write
 
     steps:
       - name: Checkout
