@@ -16,14 +16,17 @@ import pandas as pd
 from io import StringIO
 import numpy as np
 import re
+import os
+from datetime import datetime
+from pathlib import Path
+
 from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 from xml.etree.ElementTree import ElementTree
 import xml.etree.ElementTree as ET
 import pyproj
 import ast
-import os
-from datetime import datetime
+
 
 @dataclass
 class Test():
@@ -1116,7 +1119,7 @@ class Bore(Test):
 
         self.soillayers = self.add_components_NEN()
 
-    def load_gef(self, gefFile, from_file: bool = True):
+    def load_gef(self, gefFile: str | Path, from_file: bool = True):
 
         self.columninfo = {}
         self.columnvoid_values = {}
