@@ -16,14 +16,17 @@ import pandas as pd
 from io import StringIO
 import numpy as np
 import re
+import os
+from datetime import datetime
+from pathlib import Path
+
 from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 from xml.etree.ElementTree import ElementTree
 import xml.etree.ElementTree as ET
 import pyproj
 import ast
-import os
-from datetime import datetime
+
 
 @dataclass
 class Test():
@@ -1118,7 +1121,7 @@ class Bore(Test):
 
         self.soillayers = self.add_components_NEN()
 
-    def load_gef(self, gefFile):
+    def load_gef(self, gefFile: str | Path, from_file: bool = True):
 
         self.columninfo = {}
         self.columnvoid_values = {}
@@ -1144,10 +1147,13 @@ class Bore(Test):
         columnseparator_pattern = re.compile(r'#COLUMNSEPARATOR\s*=\s*(?P<columnseparator>.*)\s*')
         recordseparator_pattern = re.compile(r'#RECORDSEPARATOR\s*=\s*(?P<recordseparator>.*)\s*')
 
-        self.metadata_from_gef(gefFile)
+        self.metadata_from_gef(gefFile, fromFile=from_file)
 
-        with open(gefFile) as f:
-            gef_raw = f.read()
+        if from_file:
+            with open(gefFile) as f:
+                gef_raw = f.read()
+        else:
+            gef_raw = gefFile
 
         try:
             match = re.search(data_pattern, gef_raw)
