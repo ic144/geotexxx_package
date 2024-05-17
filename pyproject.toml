@@ -7,10 +7,3 @@ build-backend = "setuptools.build_meta"
 version_scheme =  "post-release"
 local_scheme =  "node-and-date"
 write_to =  "src/geotexxx/_version_generated.py"
-
-[tool.setuptools.packages.find]
-# All the following settings are optional:
-where = ["src"]  # ["."] by default
-include = ["geotexxx*"]  # ["*"] by default
-exclude = ["geotexxx.tests*"]  # empty by default
-namespaces = false  # true by default
