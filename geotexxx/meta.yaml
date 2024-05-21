@@ -31,6 +31,10 @@ test:
     - pip check
   requires:
     - pip
+    - setuptools_scm
+    - pandas
+    - numpy
+    - pyproj
 
 about:
   summary: Package om geotechnisch grondonderzoek te verwerken
