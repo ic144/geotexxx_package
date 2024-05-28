@@ -1074,10 +1074,10 @@ class Bore(Test):
 
             elif 'elevation' in element.tag:
                 if element.attrib['UoM'] == 'CENTIMETER':
-                    toM = 100
+                    to_m = 100
                 elif element.attrib['UoM'] == 'METER':
-                    toM = 1
-                self.groundlevel = float(element.attrib['levelValue']) / toM
+                    to_m = 1
+                self.groundlevel = float(element.attrib['levelValue']) / to_m
 
             elif 'borehole' in element.tag:
                 if element.attrib['baseDepthUoM'] == 'CENTIMETER':
@@ -1726,18 +1726,18 @@ class Multibore():
                                     # de eenheid staat nog weleens op cm, maar is dan eigenlijk m. Dit is te herkennen aan 2 (of meer) decimalen
                                     if re.match(r"-?\d*\.\d{2}", p.text):
                                         unit = 'm'
-                                        toM = 1
+                                        to_m = 1
                                     elif '19' in p.attrib['uom']:
                                         unit = 'cm'
-                                        toM = 0.01
+                                        to_m = 0.01
                                     elif '66' in p.attrib['uom']:
                                         unit = 'mm'
-                                        toM = 0.001
+                                        to_m = 0.001
                                     else:
                                         unit = 'm'
-                                        toM = 1
+                                        to_m = 1
 
-                                    bore_xyz[boreId]['groundlevel'] = float(p.text) * toM
+                                    bore_xyz[boreId]['groundlevel'] = float(p.text) * to_m
                         elif 'geometry' in child.tag:
                             for p in child.iter(): 
                                 if 'srsName' in p.attrib.keys():
@@ -1752,75 +1752,75 @@ class Multibore():
                         elif child.tag.endswith('name'):
                             bore_xyz[boreId]['name'] = child.text
             elif 'reportNumber' in element.tag:
-                projectNumber = element.text # TODO: dit moet aan alle boringen worden toegewezen
+                project_number = element.text  # TODO: dit moet aan alle boringen worden toegewezen
 
             # lagen inlezen
             # TODO: dit is niet mooi, maar het werkt wel.
             elif 'featureMember' in element.tag:
-                featureId, upperDepth, lowerDepth, grondsoort = None, None, None, None
+                feature_id, upper_depth, lower_depth, grondsoort = None, None, None, None
                 for child in element.iter():
                     # bepaal de id van de featureMember
                     # deze komt altijd voor de andere waarden
                     for key in child.attrib.keys():
                         if any(tag in child.tag for tag in ['Layer', 'Filter', 'Sample']) and 'id' in key:
-                            featureId = child.attrib[key]
-                            if featureId not in properties.keys():
-                                uppers[featureId] = {} 
-                                lowers[featureId] = {} 
-                                properties[featureId] = {}  # TODO: hier probeer ik de overstap te maken naar depths in een aparte tabel, maar weet nog niet hoe dat te doen. Code werkt voor depths in properties
+                            feature_id = child.attrib[key]
+                            if feature_id not in properties.keys():
+                                uppers[feature_id] = {} 
+                                lowers[feature_id] = {} 
+                                properties[feature_id] = {}  # TODO: hier probeer ik de overstap te maken naar depths in een aparte tabel, maar weet nog niet hoe dat te doen. Code werkt voor depths in properties
                             for child in element.iter():
                                 if 'upperDepth' in child.tag:
                                     for inmeting in child.iter():
                                         if 'value' in inmeting.tag:
-                                            upperDepth = float(inmeting.text)
+                                            upper_depth = float(inmeting.text)
                                             
                                             # bepaal de eenheid van de inmeting, m, cm of mm
                                             # de eenheid staat nog weleens op cm, maar is dan eigenlijk m. Dit is te herkennen aan 2 (of meer) decimalen
                                             if re.match(r"-?\d*\.\d{2}", inmeting.text):
                                                 unit = 'm'
-                                                toM = 1
+                                                to_m = 1
                                             elif '19' in inmeting.attrib['uom']:
                                                 unit = 'cm'
-                                                toM = 0.01
+                                                to_m = 0.01
                                             elif '66' in inmeting.attrib['uom']:
                                                 unit = 'mm'
-                                                toM = 0.001
+                                                to_m = 0.001
                                             else:
                                                 unit = 'm'
-                                                toM = 1
+                                                to_m = 1
 
-                                            uppers[featureId] = upperDepth * toM 
-                                            properties[featureId]['upper'] = upperDepth 
+                                            uppers[feature_id] = upper_depth * to_m 
+                                            properties[feature_id]['upper'] = upper_depth 
                                 elif 'lowerDepth' in child.tag:
                                     for inmeting in child.iter():
                                         if 'value' in inmeting.tag:
-                                            lowerDepth = float(inmeting.text)
+                                            lower_depth = float(inmeting.text)
 
                                             # bepaal de eenheid van de inmeting, m, cm of mm
                                             # de eenheid staat nog weleens op cm, maar is dan eigenlijk m. Dit is te herkennen aan 2 (of meer) decimalen
                                             if re.match(r"-?\d*\.\d{2}", inmeting.text):
                                                 unit = 'm'
-                                                toM = 1
+                                                to_m = 1
                                             elif '19' in inmeting.attrib['uom']:
                                                 unit = 'cm'
-                                                toM = 0.01
+                                                to_m = 0.01
                                             elif '66' in inmeting.attrib['uom']:
                                                 unit = 'mm'
-                                                toM = 0.001
+                                                to_m = 0.001
                                             else:
                                                 unit = 'm'
-                                                toM = 1
+                                                to_m = 1
 
-                                            lowers[featureId] = lowerDepth * toM
-                                            properties[featureId]['lower'] = lowerDepth
+                                            lowers[feature_id] = lower_depth * to_m
+                                            properties[feature_id]['lower'] = lower_depth
 
                     if 'relatedObservation' in child.tag:  # TODO: is deze wel nodig? Wordt hierboven ook al gedaan
                         for baby in child.iter():
                             for key in baby.attrib.keys():
                                 if 'href' in key:
-                                    featureId = baby.attrib[key].replace('#', '')
-                                    if featureId not in properties.keys():
-                                        properties[featureId] = {}
+                                    feature_id = baby.attrib[key].replace('#', '')
+                                    if feature_id not in properties.keys():
+                                        properties[feature_id] = {}
 
                     # grondsoort inlezen
                     # TODO: dit werkt niet met standaardbestanden. Dit moet er dus eigenlijk uit. Staat er nog om de code niet te laten crashen.
@@ -1829,7 +1829,7 @@ class Multibore():
                             for inmeting in element.iter():
                                 if 'remarks' in inmeting.tag and inmeting.text is not None:
                                     grondsoort = inmeting.text
-                                    properties[featureId]['soilName'] = grondsoort
+                                    properties[feature_id]['soilName'] = grondsoort
 
         # maak een dictionary om dingen ids te koppelen aan layer ids
         for element in root.iter():
@@ -1873,23 +1873,23 @@ class Multibore():
             if element.attrib.keys() is not None:
                 for key in element.attrib.keys():
                     if 'id' in key and any(tag in element.tag for tag in ['Analysis', 'Characteristic']):                           
-                            featureId = element.attrib[key]
-                            if featureId not in properties.keys():
-                                properties[featureId] = {}
-                            if featureId not in polutions.keys():  # TODO: nu zowel properties als polutions dat is niet nodig, maar ook niet heel ernstig
-                                polutions[featureId] = {}
+                            feature_id = element.attrib[key]
+                            if feature_id not in properties.keys():
+                                properties[feature_id] = {}
+                            if feature_id not in polutions.keys():  # TODO: nu zowel properties als polutions dat is niet nodig, maar ook niet heel ernstig
+                                polutions[feature_id] = {}
 
             if element.text is not None: 
                 if 'urn:immetingen:' in element.text or 'urn:imsikb0101:' in element.text:
                     # met parameter in de text kan het zowel een materiaal zijn als een hoeveelheid, daarom wordt deze apart behandeld
                     if 'parameter' in element.text and ':' in element.text:
                         if 'quantity' in element.tag:
-                            polutions[featureId]['parameter_quantity'] = int(element.text.split(':')[-1])
+                            polutions[feature_id]['parameter_quantity'] = int(element.text.split(':')[-1])
                         elif 'parameter' in element.tag:
-                            polutions[featureId]['parameter_material'] = int(element.text.split(':')[-1])
+                            polutions[feature_id]['parameter_material'] = int(element.text.split(':')[-1])
                     else:
                         try:
-                            properties[featureId][element.text.split(':')[2]] = int(element.text.split(':')[-1])
+                            properties[feature_id][element.text.split(':')[2]] = int(element.text.split(':')[-1])
                         except:
                             pass
 
