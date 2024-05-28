@@ -87,7 +87,7 @@ class Test():
         zdz_id_pattern = re.compile(r'#ZID\s*=\s*(?P<datum>\d*)\s*,\s*(?P<Z>.*)\s*,\s*(?P<dZ>.*)\s*')
         companyid_pattern = re.compile(r'#COMPANYID\s*=\s*(?P<companyid>.*),\s*.*,\s*\d*\s*') 
         projectid_pattern = re.compile(r'#PROJECTID\s*=\s*(?P<projectid>\d*)\s*')
-        project_name_pattern = re.compile(r'#project_name\s*=\s*(?P<project_name>.*)\s*')
+        project_name_pattern = re.compile(r'#PROJECTNAME\s*=\s*(?P<project_name>.*)\s*')
 
         measurementtext_pattern = re.compile(r'#MEASUREMENTTEXT\s*=\s*(?P<number>\d*),\s*(?P<text>.*)\s*')
         measurementvar_pattern = re.compile(r'#MEASUREMENTVAR\s*=\s*(?P<number>\d*),\s*(?P<text>.*)\s*')
