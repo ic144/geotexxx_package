@@ -15,15 +15,17 @@ build:
 
 requirements:
   host:
-    - python
+    - python >= 3.7
     - setuptools
     - setuptools_scm
     - pip
   run:
-    - python
-    - requests
-    - importlib-metadata  # [py<38]
-
+    - python >= 3.7
+    - numpy
+    - pandas
+    - pyproj
+    - setuptools_scm
+  
 test:
   imports:
     - geotexxx
@@ -31,10 +33,6 @@ test:
     - pip check
   requires:
     - pip
-    - setuptools_scm
-    - pandas
-    - numpy
-    - pyproj
 
 about:
   summary: Package om geotechnisch grondonderzoek te verwerken
