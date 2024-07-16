@@ -33,7 +33,17 @@ class Test():
     def __init__(self):
         self.type = str()
 
-    def type_from_gef(self, gef_file, from_file=True):
+    def type_from_gef(self, gef_file: str | Path, from_file: bool = True) -> str:
+        """Determines type of test (cpt or bore) from a GEF-file
+
+        Args:
+            gef_file (str | Path): string of path to file, string of file contents or Path object of file.
+            from_file (bool, optional): indication whether gef_file is a path. Defaults to True. Use False to use file contents.
+
+        Returns:
+            str: Type of test: 'cpt', 'bore' or 'niet bepaald'
+        """
+        
         procedure_pattern = re.compile(r'#PROCEDURECODE\s*=\s*(?P<type>.*)\s*')
         report_pattern = re.compile(r'#REPORTCODE\s*=\s*(?P<type>.*)\s*')
 
@@ -60,10 +70,19 @@ class Test():
             elif 'BORE' in match.group('type').upper():
                 return 'bore'
         except:
-            pass
+            return 'niet bepaald'
 
-    def type_from_xml(self, xml_file, from_file=True):
+    def type_from_xml(self, xml_file: str | Path, from_file: bool = True) -> str:
+        """Determines type of test (BRO cpt, BRO geotechnical bore or SIKB bore) from an XML-file
 
+        Args:
+            xml_file (str | Path): string of path to file, string of file contents or Path object of file
+            from_file (bool, optional): indication whether xml_file is a path. Defaults to True. Use False to use file contents.
+
+        Returns:
+            str: Type of test: 'cpt', 'bore' or 'sikb'
+        """
+        
         if from_file:
             # TODO: encoding toevoegen iso-8859-1 voor Windows
             with open(xml_file) as f:
@@ -78,7 +97,14 @@ class Test():
         else:
             return 'bore'
 
-    def metadata_from_gef(self, gef_file, from_file=True):
+    def metadata_from_gef(self, gef_file: str | Path, from_file: bool = True):  # TODO: add return to method
+        """Read metadata from a gef file header.
+        Metadata is added to the Cpt-object
+
+        Args:
+            gef_file (str | Path): string of path to file, string of file contents or Path object of file.
+            from_file (bool, optional): indication whether gef_file is a path. Defaults to True. Use False to use file contents.
+        """
         filename_pattern = re.compile(r'(.*[\\/])*(?P<filename>.*)\.')
         gefid_pattern = re.compile(r'#GEFID\s*=\s*(?P<major>\d),\s*(?P<minor>\d),\s*(?P<build>\d)\s*')
         xydxdy_id_pattern = re.compile(r'#XYID\s*=\s*(?P<coordsys>\d*)\s*,\s*(?P<X>\d*.?\d*)\s*,\s*(?P<Y>\d*.?\d*)\s*,\s*(?P<dx>\d*.?\d*),\s*(?P<dy>\d*.?\d*)\s*')
@@ -258,6 +284,14 @@ class Test():
 
 @dataclass(repr=True, eq=True)
 class Cpt(Test):
+    """Class for cone penetration tests objects
+
+    Args:
+        Test (_type_): inherits from Test class
+
+    Returns:
+        Cpt: Cpt-object
+    """
 
     easting: float = None
     northing: float = None
@@ -277,7 +311,15 @@ class Cpt(Test):
         self.filedate = {}
         self.testdate = {}
 
-    def load_son(self, son_file, check_add_friction_ratio=False, check_add_depth=False, from_file=True):
+    def load_son(self, son_file: str | Path, check_add_friction_ratio: bool = False, check_add_depth: bool = False, from_file: bool = True):  # TODO: add return to method
+        """Read CPT metadata and data from a son-file.
+
+        Args:
+            son_file (str | Path): string of path to file, string of file contents or Path object of file
+            check_add_friction_ratio (bool, optional): option to check if the parameter friction ratio is included in the data, if not add the friction ratio based on cone resistance and local friction. Defaults to False.
+            check_add_depth (bool, optional): option to check if the parameter depth is included in the data, if not add the depth based on penetration length and inclination. Defaults to False.
+            from_file (bool, optional): indication whether son_file is a path. Defaults to True. Use False to use file contents.
+        """
         filename_pattern = re.compile(r'(.*[\\/])*(?P<filename>.*)\.')
         testid_pattern = re.compile(r'Sondering\s*:\s*(?P<testid>.*)\s*')
         date_pattern = re.compile(r'Datum\s*:\s*(?P<date>[\d-]*)')
@@ -352,8 +394,15 @@ class Cpt(Test):
         if check_add_friction_ratio:
             self.check_add_frictionRatio()
 
-    def load_xml(self, xml_file, check_add_friction_ratio=False, check_add_depth=False, from_file=True):
+    def load_xml(self, xml_file: str | Path, check_add_friction_ratio: bool = False, check_add_depth: bool = False, from_file: bool = True):
+        """Read CPT metadata and data from a BRO xml-file.
 
+        Args:
+            xml_file (str | Path): string of path to file, string of file contents or Path object of file
+            check_add_friction_ratio (bool, optional): option to check if the parameter friction ratio is included in the data, if not add the friction ratio based on cone resistance and local friction. Defaults to False.
+            check_add_depth (bool, optional): option to check if the parameter depth is included in the data, if not add the depth based on penetration length and inclination. Defaults to False.
+            from_file (bool, optional): indication whether xml_file is a path. Defaults to True. Use False to use file contents.
+        """
         # lees een CPT in vanuit een BRO XML
         tree = ElementTree()
         if from_file:
@@ -442,7 +491,15 @@ class Cpt(Test):
         except:
             pass
 
-    def load_gef(self, gef_file, check_add_friction_ratio=False, check_add_depth=False, from_file=True):
+    def load_gef(self, gef_file: str | Path, check_add_friction_ratio: bool = False, check_add_depth: bool = False, from_file: bool = True):
+        """Read CPT data from a gef-file.
+
+        Args:
+            gef_file (str | Path): string of path to file, string of file contents or Path object of file
+            check_add_friction_ratio (bool, optional): option to check if the parameter friction ratio is included in the data, if not add the friction ratio based on cone resistance and local friction. Defaults to False.
+            check_add_depth (bool, optional): option to check if the parameter depth is included in the data, if not add the depth based on penetration length and inclination. Defaults to False.
+            from_file (bool, optional): indication whether gef_file is a path. Defaults to True. Use False to use file contents.
+        """
         self.columnvoid_values = {}
         self.columninfo = {}
         self.measurementvars = {}
@@ -674,6 +731,8 @@ class Cpt(Test):
             self.finaldepth = self.data["penetrationLength"].max()
 
     def check_add_frictionRatio(self):
+        """Checks whether friction ratio data is included, if not adds the friction ratio based on local friction and cone resistance
+        """
         # soms is er geen wrijvingsgetal gerapporteerd
         if "frictionRatio" not in self.data.columns or self.data["frictionRatio"].isna().all():
             # als er wel lokale wrijving is gerapporteerd, kan wrijvingsgetal berekend worden
@@ -684,7 +743,17 @@ class Cpt(Test):
                 self.data["localFriction"] = 0
                 self.data["frictionRatio"] = 0
 
-    def plot(self, path='./output', save_fig=True, output_type='png'):
+    def plot(self, path: str = './output', save_fig: bool = True, output_type: str = 'png'):
+        """Creates a plot of a CPT
+
+        Args:
+            path (str, optional): path of folder to save the output figure. Defaults to './output'.
+            save_fig (bool, optional): option to save the figure. Defaults to True. Use False to return the figure object
+            output_type (str, optional): file type to use to save the output figure. Defaults to 'png'.
+
+        Returns:
+            matplotlib figure: matplotlib figure object
+        """
         if self.groundlevel == None:
             self.groundlevel = 0
 
@@ -807,6 +876,8 @@ class Cpt(Test):
         return fig
 
     def check_add_depth(self):
+        """Checks whether depth data is included, if not adds the depth based on penetration length and inclination
+        """
         # soms is er geen diepte, maar wel sondeerlengte aanwezig
         # sondeerlengte als diepte gebruiken is goed genoeg als benadering
         # TODO: onderstaande blok voor diepte correctie is niet gecheckt op correctheid 
@@ -840,6 +911,9 @@ class Cpt(Test):
                     self.data["depth"] = self.data["penetrationLength"].abs()
 
     def interpret(self):
+        """Convenience function to do all available interpretations on the CPT data to soil type
+        Interpretations are added as a column to the data attribute and can be used to create a Bore object
+        """
         # de threeType en NEN regels gelden voor log(qc)
         self.data['logConeResistance'] = np.log(self.data['coneResistance'])
 
@@ -850,6 +924,11 @@ class Cpt(Test):
         self.data = self.interpret_custom()
 
     def interpret_custom(self):
+        """Custom interpretation which can be based on any parameter
+
+        Returns:
+            dataframe: dataframe with added column of interpretation
+        """
         conditions = [
             self.data['frictionRatio'].le(1.2),
             self.data['frictionRatio'].ge(4.8),
@@ -862,6 +941,11 @@ class Cpt(Test):
         return self.data
 
     def interpret_qc_only(self):
+        """Interpretation based on D-Foundations qc only rule
+
+        Returns:
+            dataframe: dataframe with added column of interpretation
+        """
         # DFoundations qc only rule
         conditionsQcOnly = [
             self.data['coneResistance'] > 4,
@@ -873,6 +957,11 @@ class Cpt(Test):
         return self.data
 
     def interpret_three_type(self):
+        """Interpretation based on D-Foundations 3 type rule
+
+        Returns:
+            dataframe: dataframe with added column of interpretation
+        """
         # DFoundations 3 type rule [frictionRatio, coneResistance] waarden voor lijn die bovengrens vormt
         # TODO: resultaat komt niet overeen met DFoundations
         soils3Type = OrderedDict([
@@ -890,6 +979,11 @@ class Cpt(Test):
         return self.data
 
     def interpret_nen(self):
+        """Interpretation based on D-Foundations NEN rule
+
+        Returns:
+            dataframe: dataframe with added column of interpretation
+        """
         # DFoundations NEN rule [frictionRatio, coneResistance]
         # TODO: resultaat komt niet overeen met DFoundations
         soilsNEN = OrderedDict([
@@ -916,12 +1010,17 @@ class Cpt(Test):
         return self.data
 
     def interpret_robertson(self):
+        """Interpretation based on Robertson soil behavior types
+
+        Returns:
+            dataframe: dataframe with added column of interpretation
+        """
         # formula from: Soil Behaviour Type from the CPT: an update 
         # http://www.cpt-robertson.com/PublicationsPDF/2-56%20RobSBT.pdf
 
         # non-normalized soil behaviour types omgezet naar Nederlandse namen
         # TODO: SBT-nummers toevoegen
-        sbtDict = {
+        sbt_dict = {
             'veen': 3.6,
             'klei': 2.95,
             'zwakKleiigSilt': 2.6,
@@ -931,15 +1030,23 @@ class Cpt(Test):
         }
 
         conditions = [
-            sbt(self.data['coneResistance'], self.data['frictionRatio'], value) for value in sbtDict.values()
+            sbt(self.data['coneResistance'], self.data['frictionRatio'], value) for value in sbt_dict.values()
         ]
-        choices = sbtDict.keys()
+        choices = sbt_dict.keys()
         self.data['Robertson'] = np.select(conditions, choices, None)
 
         return self.data
 
 @dataclass
 class Bore(Test):
+    """Class for geotechnical or soil quality bores objects
+
+    Args:
+        Test (_type_): inherits from Test
+
+    Returns:
+        Bore: Bore object
+    """
     # TODO: uitbreiden voor BHR-P en BHR-G, deels werkt het al
     def __init__(self):
         self.projectid = None
@@ -959,8 +1066,13 @@ class Bore(Test):
         self.metadata = {}
         self.descriptionquality = None
 
-    def load_xml(self, xml_file, from_file=True):
+    def load_xml(self, xml_file: str | Path, from_file: bool = True):
+        """Read bore metadata and data from a BRO xml-file.
 
+        Args:
+            xml_file (str | Path): string of path to file, string of file contents or Path object of file
+            from_file (bool, optional): indication whether xml_file is a path. Defaults to True. Use False to use file contents.
+        """
         complex_analyses = {}
 
         # lees een boring in vanuit een BRO XML
@@ -1054,7 +1166,12 @@ class Bore(Test):
             self.soillayers[description_location]["upper_NAP"] = self.groundlevel - soillayers["upperBoundary"]
             self.soillayers[description_location]["lower_NAP"] = self.groundlevel - soillayers["lowerBoundary"]
 
-    def load_dino_xml13(self, xml_file):
+    def load_dino_xml13(self, xml_file: str | Path):
+        """Read bore metadata and data from a dino v1.3 xml-file.
+
+        Args:
+            xml_file (str | Path): string of path to file, string of file contents or Path object of file
+        """        
         # lees een boring in vanuit een dinoloket XML v1.3
         tree = ElementTree()
         tree.parse(xml_file)
@@ -1112,7 +1229,12 @@ class Bore(Test):
         self.soillayers = self.add_components_NEN()
 
     def load_gef(self, gef_file: str | Path, from_file: bool = True):
+        """Read bore data from a gef-file.
 
+        Args:
+            gef_file (str | Path): string of path to file, string of file contents or Path object of file
+            from_file (bool, optional): indication whether gef_file is a path. Defaults to True. Use False to use file contents.
+        """
         self.columninfo = {}
         self.columnvoid_values = {}
         self.descriptionquality = str() # TODO
@@ -1209,7 +1331,12 @@ class Bore(Test):
         self.soillayers = self.add_components_NEN()
 
     def add_components_NEN(self):
-        # zet de codering om in iets dat geplot kan worden
+        """Converts coded soil layers into data that can be plotted
+
+        Returns:
+            dict: dictionary containing soillayers with an added column
+        """
+        
         material_pattern = re.compile(r'(?P<main>[GKLSVZ])(?P<second>[ghklsvz])?(?P<secondQuantity>\d)?(?P<third>[ghklsvz])?(?P<thirdQuantity>\d)?(?P<fourth>[ghklsvz])?(?P<fourthQuantity>\d)?')
         components = []
         for row in self.soillayers['veld'].itertuples():
@@ -1284,8 +1411,17 @@ class Bore(Test):
         self.soillayers['veld']["components"] = components
         return self.soillayers
 
-    def plot(self, path='./output', save_fig=True, output_type='png'):
+    def plot(self, path: str = './output', save_fig: bool = True, output_type: str = 'png'):
+        """Creates a plot of a bore
 
+        Args:
+            path (str, optional): path of folder to save the output figure. Defaults to './output'.
+            save_fig (bool, optional): option to save the figure. Defaults to True. Use False to return the figure object
+            output_type (str, optional): file type to use to save the output figure. Defaults to 'png'.
+
+        Returns:
+            matplotlib figure: matplotlib figure object
+        """
         materials = {0: 'grind', 1: 'zand', 2: 'klei', 3: 'leem', 4: 'veen', 5: 'silt', 6: 'overig'}
         colorsDict = {0: "orange", 1: "yellow", 2: "green", 3: "", 4: "brown", 5: "grey", 6: "black"}  # NEN-EN-ISO 14688-1 style, geen leem
         colorsDictNEN5104 = {0: "grey", 1: "yellow", 2: "steelblue", 3: "yellowgreen", 4: "brown", 5: "", 6: "black"}  # NEN5104 style, geen silt
@@ -1367,6 +1503,7 @@ class Bore(Test):
             if self.groundlevel is not None:
                 axes[i * 2].set_ylim([self.groundlevel - self.finaldepth, self.groundlevel])
             axes[i * 2].set_xticks([])
+            axes[i * 2].set_yticks(lowers, [f'{l:.2f}' for l in lowers])
             axes[i * 2].set_ylabel('diepte [m t.o.v. NAP]')
             plt.title(description_location) 
 
@@ -1424,7 +1561,15 @@ class Bore(Test):
 
         return fig
 
-    def plot_samendrukkingsproeven(self, save_figs=False):
+    def plot_samendrukkingsproeven(self, save_figs: bool = False):
+        """Plots multiple compression tests
+
+        Args:
+            save_figs (bool, optional): option to save the plots to file. Defaults to False, which returns the plots as figure objects.
+
+        Returns:
+            _type_: list with matplotlib figure objects
+        """
         figs = []
         for sample_number, complex_analysis in self.complex_analyses.items():
             if self.analyses.loc[sample_number, 'analysisType'] == 'zetting':
@@ -1435,7 +1580,19 @@ class Bore(Test):
                     plt.close('all')
         return figs
 
-    def plot_samendrukkingsproef(self, sample_number, complex_analysis, tijd_in='min', save_fig=False, save_data=False):
+    def plot_samendrukkingsproef(self, sample_number: int, complex_analysis: pd.DataFrame, tijd_in: str = 'min' | 'dag', save_fig: bool = False, save_data: bool = False):
+        """Creates a plot for a compression test
+
+        Args:
+            sample_number (int): number of the test in the data
+            complex_analysis (pd.DataFrame): data of the test
+            tijd_in (str, optional): unit of time to be used in the plot. Defaults to 'min'.
+            save_fig (bool, optional): option to save the plot to file. Defaults to False, which returns the plot as a figure object.
+            save_data (bool, optional): option to save the data to csv-file for further analysis. Defaults to False.
+
+        Returns:
+            _type_: matplotlib figure object
+        """
         testdf = []  # dataframe om proefresultaten in tabel weg te schrijven
         # bepaal de monsterhoogte
         sampleHeight = float(self.analyses.loc[sample_number, 'endDepth']) - float(self.analyses.loc[sample_number, 'beginDepth'])
@@ -1497,7 +1654,18 @@ class Bore(Test):
 
         return fig
 
-    def plot_korrelgrootte_verdeling(self, grainsize_data, monster, save_fig=False, save_data=False):
+    def plot_korrelgrootte_verdeling(self, grainsize_data: pd.DataFrame, monster, save_fig: bool = False, save_data: bool = False):
+        """Creates a plot for a grainsize distribution
+
+        Args:
+            grainsize_data (pd.DataFrame): data of the test
+            monster (_type_): sample number
+            save_fig (bool, optional): option to save the plot to file. Defaults to False, which returns the plot as a figure object.
+            save_data (bool, optional): option to save the data to csv-file for further analysis. Defaults to False.
+
+        Returns:
+            _type_: matplotlib figure object
+        """
         fig = plt.figure()
         ax = fig.add_subplot()
         ax.semilogx(grainsize_data.columns, pd.to_numeric(grainsize_data.loc[monster]).cumsum())
@@ -1512,7 +1680,15 @@ class Bore(Test):
 
         return fig
 
-    def plot_korrelgrootte_verdelingen(self, save_figs=False):
+    def plot_korrelgrootte_verdelingen(self, save_figs: bool = False):
+        """Plots multiple grainsize distributions
+
+        Args:
+            save_figs (bool, optional): option to save the plots to file. Defaults to False, which returns the plots as figure objects.
+
+        Returns:
+            _type_: list with matplotlib figure objects
+        """
         figs = []
 
         grainsize_pattern = re.compile(r'fraction(?P<from>\d+_?\d*)u*m*to(?P<to>\d+_?\d*)(?P<unit>[um]m)')
@@ -1548,7 +1724,13 @@ class Bore(Test):
 
         return figs
 
-    def from_cpt(self, cpt, interpretation_model='Robertson'):
+    def from_cpt(self, cpt: Cpt, interpretation_model: str = 'Robertson'):
+        """Creates a bore object from an interpreted cone penetration test to make it easier to analyse and plot
+
+        Args:
+            cpt (Cpt): the Cpt object to create a bore like object from
+            interpretation_model (str, optional): which model to use. Defaults to 'Robertson'.
+        """
 
         # maak een object alsof het een boring is
         self.soillayers['cpt'] = pd.DataFrame(columns=['geotechnicalSoilName', 'frictionRatio', 'coneResistance', 'upper_NAP', 'lower_NAP'])
@@ -1585,27 +1767,42 @@ class Bore(Test):
 
         self.soillayers['cpt'].dropna(inplace=True)
 
-    def from_sikb_csv(self, boreId, boreFile, locationFile):
+    def from_sikb_csv(self, bore_id, bore_file, location_file):
+        """Creates a bore object from csv-files which were created earlier from an SIKB xml-file containing data of multiple bores
+
+        Args:
+            bore_id (_type_): id of the bore
+            bore_file (_type_): string of the path of the file containing the data of the bore
+            location_file (_type_): string of the path of the file containing the location of the bore
+        """
         # om boringen te plotten vanuit csv bestanden die gemaakt worden door de SIKB lezer
-        locations = pd.read_csv(locationFile, sep=';')
+        locations = pd.read_csv(location_file, sep=';')
         locations.set_index('boring', inplace=True, drop=False)
 
         # soms zijn de boreId in de locations getallen dan moeten ze omgezet in tekst
-        if locations['boring'].dtype != type(boreId):
+        if locations['boring'].dtype != type(bore_id):
             locations['boring'] = locations['boring'].astype(str)
 
-        self.easting = locations.loc[boreId, 'x']
-        self.northing = locations.loc[boreId, 'y']
+        self.easting = locations.loc[bore_id, 'x']
+        self.northing = locations.loc[bore_id, 'y']
 
-        self.testid = boreId
-        self.soillayers['sikb'] = pd.read_csv(boreFile, sep=';')
+        self.testid = bore_id
+        self.soillayers['sikb'] = pd.read_csv(bore_file, sep=';')
         if len(self.soillayers['sikb']) > 0:
             self.soillayers['sikb']['components'] = self.soillayers['sikb']['components'].apply(ast.literal_eval)
-            self.groundlevel = locations.loc[boreId, 'maaiveld']
+            self.groundlevel = locations.loc[bore_id, 'maaiveld']
 
     def add_components(self, soillayers):
+        """Converts the soil material names from text to something that can be plotted
+
+        Args:
+            soillayers (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         # voeg verdeling componenten toe
-        # van https://github.com/cemsbv/pygef/blob/master/pygef/broxml.py
+        # geïnspireerd op https://github.com/cemsbv/pygef/blob/master/pygef/broxml.py
         material_components = ["gravel_component", "sand_component", "clay_component", "loam_component", "peat_component", "silt_component", "special_material"]
         soil_names_dict_lists = {
             "betonOngebroken": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],  # specialMaterial
@@ -1633,6 +1830,7 @@ class Bore(Test):
             "zand": [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
             "zwakGrindigZand": [0.1, 0.9, 0.0, 0.0, 0.0, 0.0],
             "zwakGrindigeKlei": [0.1, 0.0, 0.9, 0.0, 0.0, 0.0],
+            "zwakKleiigSilt": [0.0, 0.0, 0.1, 0.0, 0.0, 0.9],
             "zwakSiltigZand": [0.0, 0.9, 0.0, 0.0, 0.0, 0.1],
             "zwakSiltigeKlei": [0.0, 0.0, 0.9, 0.0, 0.0, 0.1],
             "zwakZandigGrind": [0.9, 0.1, 0.0, 0.0, 0.0, 0.0],
@@ -1658,11 +1856,20 @@ class Bore(Test):
 
 @dataclass
 class Multibore():
+    """Class for objects consisting of multiple bore objects. Used for SIKB0101 xml-files which contain data of multiple bores.
+    """
     def __init__(self):
         self.bores = []
 
-    def load_xml_sikb0101(self, xml_file, project_name, save_files=True, from_file=True):
+    def load_xml_sikb0101(self, xml_file: str, project_name: str, save_files: bool = True, from_file: bool = True):
+        """Read bore metadata and data from a SIKB0101 xml-file.
 
+        Args:
+            xml_file (str): string of path to file or string of file contents
+            project_name (str): name of project used to gather output in a folder
+            save_files (bool, optional): option to save data to files. Defaults to True. Use False to return objects
+            from_file (bool, optional): indication whether xml_file is a path. Defaults to True. Use False to use file contents.
+        """
         # lees boringen in vanuit een SIKB0101 XML
         # anders dan de BRO komen alle boringen van een project in 1 bestand
         if from_file:
@@ -2033,6 +2240,14 @@ class Multibore():
 
 
 def code2text(series):
+    """Convert codes used in xml file to meaningful names. Requires tables to lookup in.
+
+    Args:
+        series (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     # functie om codes gebruikt in de XML op te zoeken in de domeintabellen van SIKB
     series_translated = {}
     for index, value in series.items():
@@ -2052,6 +2267,14 @@ def code2text(series):
 
 
 def bodemsoort_to_components(series):
+    """Converts soil names from SIKB0101 to soil names used by BRO
+
+    Args:
+        series (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     # functie om de naamgeving gebruikt in SIKB om te zetten in de dictionary met waarden zoals gebruikt voor het plotten van boringen
     if 'OrganischeStofGehalte' in series.index and pd.notna(series['OrganischeStofGehalte']):
         humeus = int(series['OrganischeStofGehalte'][-1]) * 0.049
@@ -2106,6 +2329,16 @@ def is_below(p, a, b):
 
 
 def sbt(qc, rf, isbt):
+    """Calculates Robertson soil behavior type from cone resistance and friction ratio and checks against the categories of sbt to convert to soil type
+
+    Args:
+        qc (_type_): _description_
+        rf (_type_): _description_
+        isbt (bool): _description_
+
+    Returns:
+        _type_: _description_
+    """
     # formule voor non-normalized soil behaviour type
     # TODO: deze formule is er twee vormen
     # er is ook https://cpt-robertson.com/PublicationsPDF/CPT%20Guide%206th%202015.pdf
