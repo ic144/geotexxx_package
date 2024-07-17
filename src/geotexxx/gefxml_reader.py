@@ -1580,13 +1580,13 @@ class Bore(Test):
                     plt.close('all')
         return figs
 
-    def plot_samendrukkingsproef(self, sample_number: int, complex_analysis: pd.DataFrame, tijd_in: str = 'min' | 'dag', save_fig: bool = False, save_data: bool = False):
+    def plot_samendrukkingsproef(self, sample_number: int, complex_analysis: pd.DataFrame, tijd_in: str = 'min', save_fig: bool = False, save_data: bool = False):
         """Creates a plot for a compression test
 
         Args:
             sample_number (int): number of the test in the data
             complex_analysis (pd.DataFrame): data of the test
-            tijd_in (str, optional): unit of time to be used in the plot. Defaults to 'min'.
+            tijd_in (str, optional): unit of time to be used in the plot. Defaults to 'min', other option is 'dag'.
             save_fig (bool, optional): option to save the plot to file. Defaults to False, which returns the plot as a figure object.
             save_data (bool, optional): option to save the data to csv-file for further analysis. Defaults to False.
 
