@@ -12,7 +12,7 @@ def test_borehole_string_parsing():
     with open(boreholes_path / "test_borehole.xml") as f:
         xml = f.read()
         bh_xml = Bore()
-        bh_xml.load_xml(xml, fromFile=False)
+        bh_xml.load_xml(xml, from_file=False)
 
     # # Test loading .gef file as string
     with open(boreholes_path / "test_borehole.gef") as f:
