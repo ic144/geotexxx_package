@@ -1724,6 +1724,83 @@ class Bore(Test):
 
         return figs
 
+    def plot_schuifsterkteproef(self, save_figs=False):
+        """Plots shear strength test
+
+        Args:
+            save_figs (bool, optional): option to save the plots to file. Defaults to False to return a figure.
+
+        Returns:
+            _type_: matplotlib figure of plot
+        """
+        schuifspanningsProeven = self.analyses[self.analyses['analysisType'] == 'schuifspanningsverloopBelasting']
+
+        # stel een teller in om monsters te groeperen per drie voor single stage
+        sampleCounter = 0
+        # doorloop de monsters
+
+        # maak een figuur met subfiguren
+        fig = plt.figure(figsize=(11.7 * 2, 8.3 * 2)) # 8.3 x 11.7 inch is een A4
+        gs = GridSpec(3, 2, height_ratios=[4, 4, 1])
+
+        ax1 = fig.add_subplot(gs[0, 0])
+        ax2 = fig.add_subplot(gs[0, 1])
+        ax3 = fig.add_subplot(gs[1, 0])
+        ax4 = fig.add_subplot(gs[1, 1])
+        axes = [ax1, ax2, ax3, ax4]
+
+        for sample, data in schuifspanningsProeven.iterrows():
+
+            # tel de monsters
+            sampleCounter += 1
+
+            # data inlezen voor dit monster
+            proefdata = pd.read_csv(StringIO(data['values']), sep=',', lineterminator=';', header=None)
+
+            # kolommen namen geven
+            columns = {0: 'tijd',
+                    1: 'verticaleRek',
+                    2: 'normaalSpanning',
+                    3: 'schuifSpanning',
+                    4: 'volumeVerandering',
+                    5: 'verschilWaterspanning'}        
+            proefdata.rename(columns=columns, inplace=True)
+
+            proefdata['verschilSpanning'] = proefdata['normaalSpanning'] - proefdata['schuifSpanning']
+
+            plotParameters = {
+                0: {'x': 'tijd', 'y': 'verticaleRek'},
+                1: {'x': 'verticaleRek', 'y': 'verschilSpanning'},
+                2: {'x': 'normaalSpanning', 'y': 'schuifSpanning'},
+                3: {'x': 'verticaleRek', 'y': 'verschilWaterspanning'},
+            }
+
+            for k,v in plotParameters.items():
+                axes[k].plot(proefdata[v['x']], proefdata[v['y']], label=f"{data['beginDepth']}-{data['endDepth']}")
+                axes[k].set_xlabel(v['x'])
+                axes[k].set_ylabel(v['y'])
+
+            if sampleCounter == 3:
+                plt.suptitle(bore.testid)
+                plt.legend()
+                plt.show()
+                plt.close('all')
+                # reset de teller
+                sampleCounter = 0
+                # maak een figuur met subfiguren
+                fig = plt.figure(figsize=(11.7 * 2, 8.3 * 2)) # 8.3 x 11.7 inch is een A4
+                gs = GridSpec(3, 2, height_ratios=[4, 4, 1])
+                ax1 = fig.add_subplot(gs[0, 0])
+                ax2 = fig.add_subplot(gs[0, 1])
+                ax3 = fig.add_subplot(gs[1, 0])
+                ax4 = fig.add_subplot(gs[1, 1])
+                axes = [ax1, ax2, ax3, ax4]
+
+            if save_figs:
+                plt.savefig(f'./output/schuifsterkte_{self.testid}_{sample}.png')
+            else:
+                return fig
+
     def from_cpt(self, cpt: Cpt, interpretation_model: str = 'Robertson'):
         """Creates a bore object from an interpreted cone penetration test to make it easier to analyse and plot
 
