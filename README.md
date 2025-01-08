@@ -3,7 +3,7 @@ Package om geotechnische sonderingen of boringen in GEF, BRO-XML, Dino XML, SON 
 
 
 ## Dependecies
-* matplotlib
+* matplotlib-base
 * numpy
 * pandas
 * pyproj
