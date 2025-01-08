@@ -7,3 +7,11 @@ build-backend = "setuptools.build_meta"
 version_scheme =  "post-release"
 local_scheme =  "node-and-date"
 write_to =  "src/geotexxx/_version_generated.py"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    # note the use of single quote below to denote "raw" strings in TOML
+    'ignore:function ham\(\) is deprecated:DeprecationWarning',
+]
