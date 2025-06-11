@@ -817,7 +817,7 @@ class Cpt(Test):
 
         # plot maaiveld, bestaat uit een streep en een arcering
         axes[0].plot(x_maaiveld, y_maaiveld, color='black')
-        axes[0].barh(self.groundlevel, width=10, height=-0.4, align='edge', hatch='/\/', color='#ffffffff')
+        axes[0].barh(self.groundlevel, width=10, height=-0.4, align='edge', hatch=r'/\/', color='#ffffffff')
 
         # stel de teksten in voor de labels
         axes[0].set_ylabel("Niveau [m t.o.v. NAP]")
@@ -1342,9 +1342,12 @@ class Bore(Test):
         for row in self.soillayers['veld'].itertuples():
             components_row = {}
             material = str(getattr(row, 'soilName')) # kreeg een keer 0 als material, vandaar de str
-            if material in ['NBE', '0', 'PU', 'nan']:
-                main = 'N'
-                secondQuantity, thirdQuantity, fourthQuantity = 0, 0, 0
+            for unknown_soil in ['NBE', '0', 'PU', 'nan']:
+                if unknown_soil in material: ###
+                    print(f'unknown material is :{unknown_soil}')
+                    main = 'N'
+                    secondQuantity, thirdQuantity, fourthQuantity = 0, 0, 0
+                    break
             else:
                 match = re.search(material_pattern, material)
                 main = match.group('main')
