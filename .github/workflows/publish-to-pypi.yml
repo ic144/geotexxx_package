@@ -128,9 +128,16 @@ jobs:
           skip-existing: true
 
       - name: Publish to PyPI
+        runs-on: ubuntu-latest
+        environment:
+          name: pypi
+          url: https://pypi.org/p/geotexxx
+        permissions:
+          id-token: write
         # Only publish to PyPI when a release triggers the build
         if: success() && github.event_name == 'release'
-        uses: pypa/gh-action-pypi-publish@v1.8.12
-        #with:
-        #  user: __token__
-        #  password: ${{ secrets.PYPI_TOKEN}}
+        steps:
+          uses: pypa/gh-action-pypi-publish@v1.8.12
+          #with:
+          #  user: __token__
+          #  password: ${{ secrets.PYPI_TOKEN}}
