@@ -131,8 +131,6 @@ jobs:
         environment:
           name: pypi
           url: https://pypi.org/p/geotexxx
-        permissions:
-          id-token: write
         # Only publish to PyPI when a release triggers the build
         if: success() && github.event_name == 'release'
         uses: pypa/gh-action-pypi-publish@v1.8.12
