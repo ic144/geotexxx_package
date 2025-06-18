@@ -136,8 +136,7 @@ jobs:
           id-token: write
         # Only publish to PyPI when a release triggers the build
         if: success() && github.event_name == 'release'
-        steps:
-          uses: pypa/gh-action-pypi-publish@v1.8.12
-          #with:
-          #  user: __token__
-          #  password: ${{ secrets.PYPI_TOKEN}}
+        uses: pypa/gh-action-pypi-publish@v1.8.12
+        #with:
+        #  user: __token__
+        #  password: ${{ secrets.PYPI_TOKEN}}
