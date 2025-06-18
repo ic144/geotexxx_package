@@ -27,6 +27,7 @@ import xml.etree.ElementTree as ET
 import pyproj
 import ast
 
+pd.options.mode.copy_on_write = True
 
 @dataclass
 class Test():
@@ -817,7 +818,7 @@ class Cpt(Test):
 
         # plot maaiveld, bestaat uit een streep en een arcering
         axes[0].plot(x_maaiveld, y_maaiveld, color='black')
-        axes[0].barh(self.groundlevel, width=10, height=-0.4, align='edge', hatch='/\/', color='#ffffffff')
+        axes[0].barh(self.groundlevel, width=10, height=-0.4, align='edge', hatch=r'/\/', color='#ffffffff')
 
         # stel de teksten in voor de labels
         axes[0].set_ylabel("Niveau [m t.o.v. NAP]")
@@ -964,6 +965,12 @@ class Cpt(Test):
         """
         # DFoundations 3 type rule [frictionRatio, coneResistance] waarden voor lijn die bovengrens vormt
         # TODO: resultaat komt niet overeen met DFoundations
+
+        # als er geen wrijvingsgetal of conusweerstand is gemeten, dan is er ook geen grondsoort te bepalen
+        # oude numpy v1 pakte wel nan-waarden, v2 niet meer
+        # daarom nan's verwijderen
+        self.data = self.data.dropna(subset=['frictionRatio', 'logConeResistance'])
+
         soils3Type = OrderedDict([
             ['veen', [np.full((len(self.data), 2), [0., np.log10(0.00002)]), np.full((len(self.data), 2), [10, np.log10(0.2)])]],
             ['klei', [np.full((len(self.data), 2), [0., np.log10(0.01)]), np.full((len(self.data), 2), [10, np.log10(100)])]],
@@ -986,6 +993,12 @@ class Cpt(Test):
         """
         # DFoundations NEN rule [frictionRatio, coneResistance]
         # TODO: resultaat komt niet overeen met DFoundations
+
+        # als er geen wrijvingsgetal of conusweerstand is gemeten, dan is er ook geen grondsoort te bepalen
+        # oude numpy v1 pakte wel nan-waarden, v2 niet meer
+        # daarom nan's verwijderen
+        self.data = self.data.dropna(subset=['frictionRatio', 'logConeResistance'])
+
         soilsNEN = OrderedDict([
             # ['veen', [[np.log10(0.0001), np.log10(0)], [np.log10(10), np.log10(0.08)]]], # slappe consistentie, past niet in schema
             ['veen', [[np.log10(0.0001), np.log10(0.000058)], [np.log10(10), np.log10(.58)]]],  # coneResistance van het eerste punt aangepast
@@ -2402,7 +2415,14 @@ def bodemsoort_to_components(series):
 def is_below(p, a, b):
     # functie die gebruikt wordt om te bepalen of punt boven of onder lijn valt
     # wordt gebruikt voor interpreteren van sondering naar grondopbouw
-    return np.cross(p-a, b-a) > 0
+    
+    # numpy v2 accepteert alleen nog dimension 3
+    # input data is dimension 2
+    p['dummy'] = 0
+    a = np.c_[a, np.zeros(shape=len(a))]
+    b = np.c_[b, np.zeros(shape=len(b))]
+
+    return np.cross(p-a, b-a)[:,-1] > 0
 
 
 def sbt(qc, rf, isbt):
@@ -2419,7 +2439,7 @@ def sbt(qc, rf, isbt):
     # formule voor non-normalized soil behaviour type
     # TODO: deze formule is er twee vormen
     # er is ook https://cpt-robertson.com/PublicationsPDF/CPT%20Guide%206th%202015.pdf
-    return ((3.47 - np.log10(qc * 1000 / 100)) ** 2 + (np.log10(rf) + 1.22) ** 2) ** 0.5 - isbt > 0
+    return ((3.47 - np.log10(qc * 1000 / 100)) ** 2 + (np.log10(rf.astype(float)) + 1.22) ** 2) ** 0.5 - isbt > 0
 
 # TODO:
 # bij SIKB toevoegen:
