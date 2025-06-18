@@ -26,6 +26,17 @@ class TestGefXmlReader:
             bh_gef.load_gef(gef, from_file=False)
             assert True
 
+    def test_borehole_2_string_parsing_gef(self):
+        # Get path to test boreholes
+        boreholes_path = Path(__file__).parent / "borehole-files"
+
+        # Test loading .gef file as string
+        with open(boreholes_path / "test_borehole_2.gef") as f:
+            gef = f.read()
+            bh_gef = Bore()
+            bh_gef.load_gef(gef, from_file=False)
+            assert True
+
     def test_cpt_incl_interpretation(self):
         cpt = Cpt()
         xml_string = requests.get('https://publiek.broservices.nl/sr/cpt/v1/objects/CPT000000183472').text
