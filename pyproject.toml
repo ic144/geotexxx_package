@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "geotexxx"
+version = "0.3.3"
 authors = [
     {name = "Thomas van der Linden", email = "t.van.der.linden@amsterdam.nl"},
 ]
@@ -26,15 +27,11 @@ dependencies = [
     "matplotlib",
     "requests",
 ]
-dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://github.com/ic144/geotexxx_package"
 Repository = "https://github.com/ic144/geotexxx_package"
 Issues = "https://github.com/ic144/geotexxx_package/issues"
-
-[tool.setuptools.dynamic]
-version = {attr = "geotexxx.__version__"}
 
 [tool.setuptools_scm]
 version_scheme =  "post-release"
