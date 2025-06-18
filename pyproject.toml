@@ -29,12 +29,12 @@ dependencies = [
 dynamic = ["version"]
 
 [project.urls]
-Homepage = https://github.com/ic144/geotexxx_package
-Repository = https://github.com/ic144/geotexxx_package
-Issues = https://github.com/ic144/geotexxx_package/issues
+Homepage = "https://github.com/ic144/geotexxx_package"
+Repository = "https://github.com/ic144/geotexxx_package"
+Issues = "https://github.com/ic144/geotexxx_package/issues"
 
 [tool.setuptools.dynamic]
-version = {attr = "my_package.__version__"}
+version = {attr = "geotexxx.__version__"}
 
 [tool.setuptools_scm]
 version_scheme =  "post-release"
