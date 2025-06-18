@@ -12,7 +12,7 @@ authors = [
 description = "Verwerken van geotechnisch grondonderzoek"
 readme = "README.md"
 requires-python = ">=3.11"
-license = EUPL-v1.2
+license = "EUPL-v1.2"
 license-files = ["LICENSE.txt"]
 classifiers = [
     "Programming Language :: Python :: 3",
