@@ -1,4 +1,8 @@
 # inspired by https://github.com/fatiando/verde/blob/main/pyproject.toml
+[project]
+name = "geotexxx"
+dynamic = ["version"]
+
 [build-system]
 requires = ["setuptools", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
