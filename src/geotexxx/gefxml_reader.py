@@ -966,9 +966,9 @@ class Cpt(Test):
         # DFoundations 3 type rule [frictionRatio, coneResistance] waarden voor lijn die bovengrens vormt
         # TODO: resultaat komt niet overeen met DFoundations
 
-        # TODO: fix onderstaande
         # als er geen wrijvingsgetal of conusweerstand is gemeten, dan is er ook geen grondsoort te bepalen
         # oude numpy v1 pakte wel nan-waarden, v2 niet meer
+        # daarom nan's verwijderen
         self.data = self.data.dropna(subset=['frictionRatio', 'logConeResistance'])
 
         soils3Type = OrderedDict([
@@ -993,12 +993,12 @@ class Cpt(Test):
         """
         # DFoundations NEN rule [frictionRatio, coneResistance]
         # TODO: resultaat komt niet overeen met DFoundations
-        
-        # TODO: fix onderstaande
+
         # als er geen wrijvingsgetal of conusweerstand is gemeten, dan is er ook geen grondsoort te bepalen
         # oude numpy v1 pakte wel nan-waarden, v2 niet meer
+        # daarom nan's verwijderen
         self.data = self.data.dropna(subset=['frictionRatio', 'logConeResistance'])
-        
+
         soilsNEN = OrderedDict([
             # ['veen', [[np.log10(0.0001), np.log10(0)], [np.log10(10), np.log10(0.08)]]], # slappe consistentie, past niet in schema
             ['veen', [[np.log10(0.0001), np.log10(0.000058)], [np.log10(10), np.log10(.58)]]],  # coneResistance van het eerste punt aangepast
