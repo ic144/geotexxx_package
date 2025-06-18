@@ -4,6 +4,35 @@
 requires = ["setuptools", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "geotexxx"
+version = "0.3.3"
+authors = [
+    {name = "Thomas van der Linden", email = "t.van.der.linden@amsterdam.nl"},
+]
+description = "Verwerken van geotechnisch grondonderzoek"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "EUPL-1.2"
+license-files = ["LICENSE.txt"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "numpy",
+    "pandas",
+    "pyproj",
+    "setuptools",
+    "setuptools_scm",
+    "matplotlib",
+    "requests",
+]
+
+[project.urls]
+Homepage = "https://github.com/ic144/geotexxx_package"
+Repository = "https://github.com/ic144/geotexxx_package"
+Issues = "https://github.com/ic144/geotexxx_package/issues"
+
 [tool.setuptools_scm]
 version_scheme =  "post-release"
 local_scheme =  "node-and-date"
