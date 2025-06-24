@@ -1344,13 +1344,12 @@ class Bore(Test):
             material = str(getattr(row, 'soilName')) # kreeg een keer 0 als material, vandaar de str
             for unknown_soil in ['NBE', '0', 'PU', 'nan']:
                 if unknown_soil in material: ###
-                    print(f'unknown material is :{unknown_soil}')
                     main = 'N'
                     secondQuantity, thirdQuantity, fourthQuantity = 0, 0, 0
                     break
-            else:
-                match = re.search(material_pattern, material)
-                main = match.group('main')
+                else:
+                    match = re.search(material_pattern, material)
+                    main = match.group('main')
 
             try:
                 match = re.search(material_pattern, material)
