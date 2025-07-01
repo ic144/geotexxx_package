@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "geotexxx"
-version = "0.3.3"
+version = "0.3.4"
 authors = [
     {name = "Thomas van der Linden", email = "t.van.der.linden@amsterdam.nl"},
 ]
