@@ -1355,12 +1355,14 @@ class Bore(Test):
         for row in self.soillayers['veld'].itertuples():
             components_row = {}
             material = str(getattr(row, 'soilName')) # kreeg een keer 0 als material, vandaar de str
-            if material in ['NBE', '0', 'PU', 'nan']:
-                main = 'N'
-                secondQuantity, thirdQuantity, fourthQuantity = 0, 0, 0
-            else:
-                match = re.search(material_pattern, material)
-                main = match.group('main')
+            for unknown_soil in ['NBE', '0', 'PU', 'nan']:
+                if unknown_soil in material: ###
+                    main = 'N'
+                    secondQuantity, thirdQuantity, fourthQuantity = 0, 0, 0
+                    break
+                else:
+                    match = re.search(material_pattern, material)
+                    main = match.group('main')
 
             try:
                 match = re.search(material_pattern, material)
