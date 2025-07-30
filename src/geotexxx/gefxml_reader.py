@@ -1317,7 +1317,13 @@ class Bore(Test):
         except:
             pass
 
-        # zet de data om in een dataframe, dan kunnen we er wat mee    
+        # zet de data om in een dataframe, dan kunnen we er wat mee
+        self.soillayers['veld'] = self.soillayers['veld'].rstrip("\n") # remove possible end of line characters that give error
+        
+        # check if all fields in the borehole description have the same length
+        # if they do not have the same length, add column separators to have equal amount of column separators in every row
+        if not self._has_equal_borehole_fields():
+            self._fill_description_fields()
         self.soillayers['veld'] = pd.read_csv(StringIO(self.soillayers['veld']), sep=self.columnseparator, skipinitialspace=True, header=None)
 
         # vervang de dummy waarden door nan
@@ -1342,6 +1348,30 @@ class Bore(Test):
         self.finaldepth = self.soillayers['veld']["upper_NAP"].max() - self.soillayers['veld']["lower_NAP"].min()
 
         self.soillayers = self.add_components_NEN()
+    
+    def _has_equal_borehole_fields(self):
+        """Private method to assess if the number of borehole fields are equal for every description when parsing the borehole"""
+        soillayers_split = [line.split(self.columnseparator) for line in self.soillayers['veld'].split("\n")]
+        lengths = [len(line) for line in soillayers_split]
+        max_length = max(lengths)
+        # check if all rows in the borehole have the same amount of fields as the maximum length row
+        # if not all rows have the the same amount of fields as the maximum, they need to be filled to the maximum amount for parsing
+        return all(l == max_length for l in lengths)
+
+    def _fill_description_fields(self):
+        """If the number of fields is not equal for every description, the entrees with less fields will be filled up."""
+        soillayers_split = [line.split(self.columnseparator) for line in self.soillayers['veld'].split("\n")]
+        max_length = max(len(line) for line in soillayers_split)
+        fixed_length_soil_layers: list[str] = []
+        for layer in soillayers_split:
+            if len(layer) != max_length:
+                n_colon = max_length - len(layer)
+                fixed_length_str: str = self.columnseparator.join(layer[:-1]) + self.columnseparator * (n_colon + 1) + layer[-1]
+                fixed_length_soil_layers.append(fixed_length_str)
+            else:
+                fixed_length_soil_layers.append(self.columnseparator.join(layer))
+        fixed_length_soil_layers = "\n".join(fixed_length_soil_layers)
+        self.soillayers['veld'] = fixed_length_soil_layers
 
     def add_components_NEN(self):
         """Converts coded soil layers into data that can be plotted

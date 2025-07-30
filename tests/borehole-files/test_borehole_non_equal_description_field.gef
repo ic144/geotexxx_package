@@ -1,0 +1,57 @@
+#GEFID = 1,1,0
+#COLUMNTEXT = 1, aan
+#COLUMNSEPARATOR = ;
+#RECORDSEPARATOR = !
+#FILEOWNER = DINO
+#COMPANYID = Onbekend
+#FILEDATE = 2023,1,24
+#PROJECTID = DINO-BOR
+#COLUMN = 9
+#COLUMNINFO = 1, m, Diepte bovenkant laag, 1
+#COLUMNINFO = 2, m, Diepte onderkant laag, 2
+#COLUMNINFO = 3, mm, Zandmediaan, 8
+#COLUMNINFO = 4, mm, Grindmediaan, 9
+#COLUMNINFO = 5, %, Lutum percentage, 3
+#COLUMNINFO = 6, %, Silt percentage, 4
+#COLUMNINFO = 7, %, Zand percentage, 5
+#COLUMNINFO = 8, %, Grind percentage, 6
+#COLUMNINFO = 9, %, Organische stof percentage, 7
+#COLUMNVOID = 1, -9999.99
+#COLUMNVOID = 2, -9999.99
+#COLUMNVOID = 3, -9999.99
+#COLUMNVOID = 4, -9999.99
+#COLUMNVOID = 5, -9999.99
+#COLUMNVOID = 6, -9999.99
+#COLUMNVOID = 7, -9999.99
+#COLUMNVOID = 8, -9999.99
+#COLUMNVOID = 9, -9999.99
+#LASTSCAN = 11
+#REPORTCODE = GEF-BORE-Report,1,0,0
+#MEASUREMENTCODE = Onbekend,-,-,-
+#TESTID = B00A0001
+#XYID = 31000,155000,463000
+#ZID = 31000,6.15
+#MEASUREMENTTEXT = 3, Dorp, plaatsnaam
+#MEASUREMENTTEXT = 6, beschrijver, beschrijver lagen
+#MEASUREMENTTEXT = 9, maaiveld, vast horizontaal niveau
+#MEASUREMENTTEXT = 13, Boorbedrijf, boorbedrijf
+#MEASUREMENTTEXT = 16, 1900-01-01, datum boring
+#MEASUREMENTTEXT = 31, PUL, boormethode
+#MEASUREMENTTEXT = 7, Rijksdriehoeksmeting, locaal coÃ¶rdinatensysteem
+#MEASUREMENTTEXT = 8, Normaal Amsterdams Peil, locaal referentiesysteem
+#MEASUREMENTVAR = 16, 12.00, m, einddiepte
+#MEASUREMENTTEXT = 14, Nee, openbaar
+#MEASUREMENTTEXT = 17, Onbekend, vochtigheidstoestand grond
+#MEASUREMENTTEXT = 18, Nee, peilbuis afwezig
+#EOH = 
+0.00;0.95;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;'Kz';'DO GR';!
+0.95;1.30;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;'Zs1';'ON';'ZFC';!
+1.30;1.90;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;'Lz3';'LI GR';'CA2';!
+1.90;4.20;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;'Zs';'LI TBR GR';'ZFC';'CA2';!
+4.20;6.45;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;'Zg1';'LI TBR GR';'ZMGO';'SMK';'ZAF';'FN2';'CA2';!
+6.45;7.25;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;'Zg';'LI TBR GR';'ZMGO';'SZG';'ZAF';'GG2';'CA2';!
+7.25;7.60;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;'Zsg';'ON';!
+7.60;8.80;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;'Zg';'LI GR';'ZZGO';'SZG';'ZAF';'CA1';!
+8.80;10.20;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;'Zg3';'LI GR';'ZZGO';'FN2';'CA1';!
+10.20;10.90;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;'Zg';'LI GR';'ZZGO';'CA2';!
+10.90;12.00;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;-9999.99;'Zg2';'LI GR';'ZMGO';'SMA';'ZAF';'GG1';'CA2';!
